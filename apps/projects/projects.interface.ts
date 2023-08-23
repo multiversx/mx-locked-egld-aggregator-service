@@ -11,5 +11,5 @@ export interface ProjectsInterface {
      * Returns the amount of staked tokens for a given address
      * @param address The address to check
      */
-    getAddressStake(address: string): Promise<{ stake: string }>;
+    getAddressStake(address: string): Promise<{ stake: string } | null>;
 }

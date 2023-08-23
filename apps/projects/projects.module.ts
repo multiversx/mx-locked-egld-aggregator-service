@@ -1,8 +1,15 @@
 import { Module } from '@nestjs/common';
-import { DummyModule } from './dummy';
+import {DummyModule, DummyService} from './dummy';
+import {SalsaModule, SalsaService} from "./salsa";
 
 @Module({
-  imports: [DummyModule],
-  exports: [DummyModule],
+  imports: [
+      DummyModule,
+      SalsaModule,
+  ],
+  exports: [
+      DummyService,
+      SalsaService,
+  ],
 })
 export class ProjectsModule {}

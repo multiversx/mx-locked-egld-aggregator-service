@@ -1,8 +1,10 @@
-import { Module } from '@nestjs/common';
+import {Injectable, Module} from '@nestjs/common';
 import { ProjectsInterface} from "../../../projects";
 import { AvailableProjects } from "../../../projects";
-
+import {ApiModuleOptions, ApiService} from "@multiversx/sdk-nestjs-http";
+import {MetricsService} from "@multiversx/sdk-nestjs-monitoring";
 @Module({})
+@Injectable()
 export class ModuleFactory {
     static rootPath = '../../../projects';
     static getService(projectName: AvailableProjects): ProjectsInterface {
@@ -13,7 +15,10 @@ export class ModuleFactory {
 
         if (services && services[`${serviceName}`]) {
             const ServiceClass = services[`${serviceName}`];
-            return new ServiceClass();
+            const apiModuleOptions = new ApiModuleOptions();
+            const metricsService = new MetricsService();
+            const apiService = new ApiService(apiModuleOptions, metricsService);
+            return new ServiceClass(apiService);
         }
         throw new Error(`Service ${serviceName} not found.`);
     }
