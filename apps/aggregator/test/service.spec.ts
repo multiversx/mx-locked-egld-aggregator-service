@@ -13,7 +13,9 @@ function isCloseTo(value1: number, value2: number, margin = 10) {
 
 describe('Projects service testing', () => {
 
-    const ACCEPABLE_PERCENTAGE_DIFFERENCE = 10;
+    const ACCEPTABLE_PERCENTAGE_DIFFERENCE = 10;
+    const API_SLEEP_TIME = 10000;
+    const BATCH_API_REQUEST_SIZE = 10;
 
     let service: ProjectsInterface;
     // eslint-disable-next-line require-await
@@ -68,8 +70,8 @@ describe('Projects service testing', () => {
                     const addressBalance = await service.getAddressStake(stakingAddresses[i]);
                     if(addressBalance?.stake === undefined) throw new Error(`Address ${stakingAddresses[i]} has undefined stake`);
                     addressSum = addressSum.plus(addressBalance.stake);
-                    if(i%10 === 0){
-                        await new Promise(resolve => setTimeout(resolve, 10000));
+                    if( i % BATCH_API_REQUEST_SIZE === 0 ){
+                        await new Promise(resolve => setTimeout(resolve, API_SLEEP_TIME));
                         console.log(`Batch ${i} executed`);
                     }
                 } catch (e) {
@@ -78,7 +80,7 @@ describe('Projects service testing', () => {
             }
             const denominatedContractSum = contractSum.dividedBy(10**18).toNumber();
             const denominatedAddressSum = addressSum.dividedBy(10**18).toNumber();
-            expect(isCloseTo(denominatedContractSum, denominatedAddressSum, ACCEPABLE_PERCENTAGE_DIFFERENCE)).toBe(true);
+            expect(isCloseTo(denominatedContractSum, denominatedAddressSum, ACCEPTABLE_PERCENTAGE_DIFFERENCE)).toBe(true);
         }
     }, 1000000);
 });
