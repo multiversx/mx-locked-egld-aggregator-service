@@ -12,14 +12,13 @@ function isCloseTo(value1: number, value2: number, margin = 10) {
 }
 
 describe('Projects service testing', () => {
-
     const ACCEPTABLE_PERCENTAGE_DIFFERENCE = 10;
     const API_SLEEP_TIME = 10000;
     const BATCH_API_REQUEST_SIZE = 10;
 
     let service: ProjectsInterface;
-    // eslint-disable-next-line require-await
-    beforeAll(async () => {
+    let batchIterations = 0;
+    beforeAll(() => {
         const module: AvailableProjects = process.env.MODULE_NAME as AvailableProjects || AvailableProjects.Sample; // default to 'Sample' if no env provided
         service = ModuleFactory.getService(module);
     });
@@ -59,27 +58,30 @@ describe('Projects service testing', () => {
         for (const contract of contractAddresses) {
             try {
                 const {body: contractData} = await request(`https://api.multiversx.com/`).get(`accounts/${contract}/delegation`);
-                contractData.forEach((delegation: any) => {
-                    contractSum = contractSum.plus(delegation.userActiveStake);
-                });
+                contractSum = contractData.reduce((acc: BigNumber, curr: any) => {
+                    return acc.plus(curr.userActiveStake);
+                }, contractSum);
             } catch (e) {
-                console.log(e);
+                throw new Error(`Error at contract ${contract}: ${e}`);
             }
-            for(let i = 0 ; i < stakingAddresses.length ; i++) {
+            for(const stakeAddress of stakingAddresses) {
                 try {
-                    const addressBalance = await service.getAddressStake(stakingAddresses[i]);
-                    if(addressBalance?.stake === undefined) throw new Error(`Address ${stakingAddresses[i]} has undefined stake`);
+                    const addressBalance = await service.getAddressStake(stakeAddress);
+                    if(addressBalance?.stake === undefined) throw new Error(`Address ${stakeAddress} has undefined stake`);
                     addressSum = addressSum.plus(addressBalance.stake);
-                    if( i % BATCH_API_REQUEST_SIZE === 0 ){
+                    if( batchIterations % BATCH_API_REQUEST_SIZE === 0 ){
                         await new Promise(resolve => setTimeout(resolve, API_SLEEP_TIME));
-                        console.log(`Batch ${i} executed`);
+                        console.log(`Batch ${batchIterations} executed`);
                     }
+                    batchIterations++;
                 } catch (e) {
-                    throw new Error(`Error at batch ${i}`);
+                    throw new Error(`Error at batch ${batchIterations}: ${e}`);
                 }
             }
-            const denominatedContractSum = contractSum.dividedBy(10**18).toNumber();
-            const denominatedAddressSum = addressSum.dividedBy(10**18).toNumber();
+            const denominatedContractSum = contractSum.dividedBy(new BigNumber(10).pow(18)).toNumber();
+            const denominatedAddressSum = addressSum.dividedBy(new BigNumber(10).pow(18)).toNumber();
+            console.log(`Contract sum: ${denominatedContractSum}`);
+            console.log(`Address sum: ${denominatedAddressSum}`);
             expect(isCloseTo(denominatedContractSum, denominatedAddressSum, ACCEPTABLE_PERCENTAGE_DIFFERENCE)).toBe(true);
         }
     }, 1000000);
