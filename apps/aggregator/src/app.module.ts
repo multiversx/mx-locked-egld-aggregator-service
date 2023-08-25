@@ -4,7 +4,7 @@ import { LoggingModule } from '@multiversx/sdk-nestjs-common';
 import { ApiConfigModule, ApiMetricsModule, DynamicModuleUtils, HealthCheckModule } from '@libs/common';
 import { ProjectsModule } from '../../projects';
 import { ModuleFactory } from "./module-factory";
-import { DataApiWritesService } from './data-api.writes.service';
+import { DataApiIndexerService } from './data-api.indexer.service';
 // import { DataApiWritesService } from './data-api.writes.service';
 
 @Module({
@@ -18,7 +18,7 @@ import { DataApiWritesService } from './data-api.writes.service';
     ModuleFactory,
   ],
   providers: [
-    DataApiWritesService
+    DataApiIndexerService
   ]
 })
 export class AppModule { }
