@@ -1,4 +1,4 @@
-export enum AvailableProjects{
+export enum AvailableProjects {
     Dummy = 'dummy',
     Salsa = 'salsa',
 }

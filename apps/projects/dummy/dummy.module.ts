@@ -5,4 +5,4 @@ import { DummyService } from './dummy.service';
   providers: [DummyService],
   exports: [DummyService],
 })
-export class DummyModule {}
+export class DummyModule { }
