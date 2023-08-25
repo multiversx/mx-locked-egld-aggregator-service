@@ -78,8 +78,8 @@ describe('Projects service testing', () => {
                     throw new Error(`Error at batch ${batchIterations}: ${e}`);
                 }
             }
-            const denominatedContractSum = contractSum.dividedBy(new BigNumber(10).pow(18)).toNumber();
-            const denominatedAddressSum = addressSum.dividedBy(new BigNumber(10).pow(18)).toNumber();
+            const denominatedContractSum = contractSum.shiftedBy(-18).toNumber();
+            const denominatedAddressSum = addressSum.shiftedBy(-18).toNumber();
             console.log(`Contract sum: ${denominatedContractSum}`);
             console.log(`Address sum: ${denominatedAddressSum}`);
             expect(isCloseTo(denominatedContractSum, denominatedAddressSum, ACCEPTABLE_PERCENTAGE_DIFFERENCE)).toBe(true);
