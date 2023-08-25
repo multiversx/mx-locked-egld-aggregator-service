@@ -1,2 +1,2 @@
 export * from './dummy.module';
-export {DummyService} from './dummy.service';
+export { DummyService } from './dummy.service';

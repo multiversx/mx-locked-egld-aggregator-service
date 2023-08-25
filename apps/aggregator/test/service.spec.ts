@@ -1,7 +1,7 @@
-import {ProjectsInterface} from "../src";
-import {ModuleFactory} from "../src/module-factory";
+import { ProjectsInterface } from "../src";
+import { ModuleFactory } from "../src/module-factory";
 import * as process from "process";
-import {AvailableProjects} from "../../projects";
+import { AvailableProjects } from "../../projects";
 import BigNumber from 'bignumber.js';
 const request = require('supertest');
 
@@ -31,17 +31,17 @@ describe('Projects service testing', () => {
         expect(service).toHaveProperty('getStakingContracts');
     });
 
-    it('should not have empty staking address list', async() => {
+    it('should not have empty staking address list', async () => {
         const stakingAddresses = await service.getStakingAddresses();
         expect(stakingAddresses.length).toBeGreaterThan(0);
     });
 
-    it('should not have empty staking contract list', async() => {
+    it('should not have empty staking contract list', async () => {
         const stakingContracts = await service.getStakingContracts();
         expect(stakingContracts.length).toBeGreaterThan(0);
     });
 
-    it('should return the contract stake amount', async() => {
+    it('should return the contract stake amount', async () => {
         const stakingAddresses = await service.getStakingAddresses();
         const random = Math.floor(Math.random() * stakingAddresses.length);
         const stake = await service.getAddressStake(stakingAddresses[random]);
@@ -50,26 +50,26 @@ describe('Projects service testing', () => {
         expect(stake?.stake).not.toBeNull();
     });
 
-    it('should check the total staked amount is equal to the sum of all staking addresses', async() => {
+    it('should check the total staked amount is equal to the sum of all staking addresses', async () => {
         const contractAddresses = await service.getStakingContracts();
         const stakingAddresses = await service.getStakingAddresses();
         let contractSum = new BigNumber(0);
         let addressSum = new BigNumber(0);
         for (const contract of contractAddresses) {
             try {
-                const {body: contractData} = await request(`https://api.multiversx.com/`).get(`accounts/${contract}/delegation`);
+                const { body: contractData } = await request(`https://api.multiversx.com/`).get(`accounts/${contract}/delegation`);
                 contractSum = contractData.reduce((acc: BigNumber, curr: any) => {
                     return acc.plus(curr.userActiveStake);
                 }, contractSum);
             } catch (e) {
                 throw new Error(`Error at contract ${contract}: ${e}`);
             }
-            for(const stakeAddress of stakingAddresses) {
+            for (const stakeAddress of stakingAddresses) {
                 try {
                     const addressBalance = await service.getAddressStake(stakeAddress);
-                    if(addressBalance?.stake === undefined) throw new Error(`Address ${stakeAddress} has undefined stake`);
+                    if (addressBalance?.stake === undefined) throw new Error(`Address ${stakeAddress} has undefined stake`);
                     addressSum = addressSum.plus(addressBalance.stake);
-                    if( batchIterations % BATCH_API_REQUEST_SIZE === 0 ){
+                    if (batchIterations % BATCH_API_REQUEST_SIZE === 0) {
                         await new Promise(resolve => setTimeout(resolve, API_SLEEP_TIME));
                         console.log(`Batch ${batchIterations} executed`);
                     }

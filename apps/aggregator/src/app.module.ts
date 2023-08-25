@@ -1,9 +1,9 @@
 
 import { Module } from '@nestjs/common';
 import { LoggingModule } from '@multiversx/sdk-nestjs-common';
-import { ApiConfigModule,  ApiMetricsModule, DynamicModuleUtils, HealthCheckModule } from '@libs/common';
+import { ApiConfigModule, ApiMetricsModule, DynamicModuleUtils, HealthCheckModule } from '@libs/common';
 import { ProjectsModule } from '../../projects';
-import {ModuleFactory} from "./module-factory";
+import { ModuleFactory } from "./module-factory";
 
 @Module({
   imports: [
