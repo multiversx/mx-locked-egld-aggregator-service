@@ -3,6 +3,9 @@ import { ModuleFactory } from "../src/module-factory";
 import * as process from "process";
 import { AvailableProjects } from "../../projects";
 import BigNumber from 'bignumber.js';
+import { ApiConfigService } from "@libs/common";
+import configuration from '../../../config/configuration';
+import { ConfigService } from "@nestjs/config";
 const request = require('supertest');
 
 function isCloseTo(value1: number, value2: number, margin = 10) {
@@ -18,9 +21,12 @@ describe('Projects service testing', () => {
 
     let service: ProjectsInterface;
     let batchIterations = 0;
+    let apiConfigService: ApiConfigService;
     beforeAll(() => {
         const module: AvailableProjects = process.env.MODULE_NAME as AvailableProjects || AvailableProjects.Sample; // default to 'Sample' if no env provided
         service = ModuleFactory.getService(module);
+        const configService = new ConfigService(configuration());
+        apiConfigService = new ApiConfigService(configService);
     });
 
 
@@ -57,7 +63,7 @@ describe('Projects service testing', () => {
         let addressSum = new BigNumber(0);
         for (const contract of contractAddresses) {
             try {
-                const { body: contractData } = await request(`https://api.multiversx.com/`).get(`accounts/${contract}/delegation`);
+                const { body: contractData } = await request(`${apiConfigService.getApiUrl()}`).get(`/accounts/${contract}/delegation`);
                 contractSum = contractData.reduce((acc: BigNumber, curr: any) => {
                     return acc.plus(curr.userActiveStake);
                 }, contractSum);
