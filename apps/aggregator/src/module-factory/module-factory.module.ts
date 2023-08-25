@@ -1,10 +1,9 @@
-import {Injectable, Module} from '@nestjs/common';
-import { ProjectsInterface} from "../../../projects";
+import { Module } from '@nestjs/common';
+import { ProjectsInterface } from "../../../projects";
 import { AvailableProjects } from "../../../projects";
-import {ApiModuleOptions, ApiService} from "@multiversx/sdk-nestjs-http";
-import {MetricsService} from "@multiversx/sdk-nestjs-monitoring";
+import { ApiModuleOptions, ApiService } from "@multiversx/sdk-nestjs-http";
+import { MetricsService } from "@multiversx/sdk-nestjs-monitoring";
 @Module({})
-@Injectable()
 export class ModuleFactory {
     static rootPath = '../../../projects';
     static getService(projectName: AvailableProjects): ProjectsInterface {

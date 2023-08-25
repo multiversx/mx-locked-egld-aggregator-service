@@ -19,7 +19,7 @@ describe('Projects service testing', () => {
     let service: ProjectsInterface;
     let batchIterations = 0;
     beforeAll(() => {
-        const module: AvailableProjects = process.env.MODULE_NAME as AvailableProjects || AvailableProjects.Sample; // default to 'Sample' if no env provided
+        const module: AvailableProjects = process.env.MODULE_NAME as AvailableProjects || AvailableProjects.Dummy; // default to 'Sample' if no env provided
         service = ModuleFactory.getService(module);
     });
 
