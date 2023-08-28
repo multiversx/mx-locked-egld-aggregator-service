@@ -14,9 +14,7 @@ export class DataApiIndexerService {
     constructor(
         private readonly apiConfigService: ApiConfigService,
         private readonly alertsService: AlertsService,
-    ) {
-        this.indexData()
-    }
+    ) { }
 
     @Cron(CronExpression.EVERY_DAY_AT_3AM)
     async indexData() {
@@ -26,9 +24,9 @@ export class DataApiIndexerService {
             try {
                 const { stakedValueSum, stakingAddresses } = await this.fetchDataForProject(project);
                 await this.writeData(project, 'stakedValue', stakedValueSum.toString());
-                await this.writeData(project, 'stakingUsers', stakingAddresses.length.toString())
+                await this.writeData(project, 'stakingUsers', stakingAddresses.length.toString());
             } catch (e) {
-                this.alertsService.sendIndexerError(`Error while indexing data for ${project}: ${e}`);
+                await this.alertsService.sendIndexerError(`Error while indexing data for ${project}: ${e}`);
                 this.logger.error(`Error while indexing data for ${project}: ${e}`);
             }
         }
