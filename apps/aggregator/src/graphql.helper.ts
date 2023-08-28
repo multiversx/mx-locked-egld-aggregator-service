@@ -1,7 +1,6 @@
-import BigNumber from 'bignumber.js';
 import moment from 'moment';
 
-export const graphqlQuery = (project: string, stakedValueSum: BigNumber) => {
+export const graphqlQuery = (project: string, key: string, value: string) => {
     return {
         operationName: "ingestData",
         query: `
@@ -12,10 +11,10 @@ export const graphqlQuery = (project: string, stakedValueSum: BigNumber) => {
             table: "LIQUID_STAKING",
             input: [
                 {
-                    timestamp: moment().unix(),
+                    timestamp: moment.utc().startOf('day').unix(),
                     series: project,
-                    key: "stakedValue",
-                    value: stakedValueSum.toString(),
+                    key,
+                    value,
                 },
             ],
         },

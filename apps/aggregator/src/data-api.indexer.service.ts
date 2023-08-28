@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AvailableProjects } from '.';
-import { ApiConfigService } from '@libs/common';
+import { AlertsService, ApiConfigService } from '@libs/common';
 import { ModuleFactory } from './module-factory';
 import BigNumber from 'bignumber.js';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -13,51 +13,69 @@ export class DataApiIndexerService {
 
     constructor(
         private readonly apiConfigService: ApiConfigService,
-    ) { }
+        private readonly alertsService: AlertsService,
+    ) {
+        this.indexData()
+    }
 
     @Cron(CronExpression.EVERY_DAY_AT_3AM)
-    async writeData() {
+    async indexData() {
         const availableProjects = Object.values(AvailableProjects).filter((key) => key !== AvailableProjects.Dummy);
-        let stakedValueSum = new BigNumber(0);
 
         for (const project of availableProjects) {
-            let batchIterations = 0;
-            const service = ModuleFactory.getService(project as AvailableProjects);
-            this.logger.log(`Processing staked value for ${project}`);
-
             try {
-                const stakingAddresses = await service.getStakingAddresses();
-                for (const address of stakingAddresses) {
-                    if (batchIterations % this.BATCH_API_REQUEST_SIZE === 0) {
-                        const stakedValue = await service.getAddressStake(address);
-                        stakedValueSum = stakedValueSum.plus(stakedValue?.stake || 0);
-                        await new Promise(resolve => setTimeout(resolve, this.API_SLEEP_TIME));
-                        console.log(`Batch ${batchIterations} executed`);
-                    }
-                    batchIterations++;
-                }
+                const { stakedValueSum, stakingAddresses } = await this.fetchDataForProject(project);
+                await this.writeData(project, 'stakedValue', stakedValueSum.toString());
+                await this.writeData(project, 'stakingUsers', stakingAddresses.length.toString())
             } catch (e) {
-                throw new Error(`Error while processing staked value for ${project}: ${e}`);
+                this.alertsService.sendIndexerError(`Error while indexing data for ${project}: ${e}`);
+                this.logger.error(`Error while indexing data for ${project}: ${e}`);
             }
+        }
+    }
 
-            try {
-                const query = graphqlQuery(project, stakedValueSum);
-                const requestData = {
-                    "method": "POST",
-                    "headers": { "content-type": "application/json" },
-                    "body": JSON.stringify(query),
-                };
+    async fetchDataForProject(project: AvailableProjects) {
+        let stakedValueSum = new BigNumber(0);
+        let batchIterations = 0;
+        let stakingAddresses: string[] = [];
+        const service = ModuleFactory.getService(project as AvailableProjects);
+        this.logger.log(`Processing staked value for ${project}`);
 
-                const apiResponse = await fetch(`${this.apiConfigService.getDataApiUrl()}/graphql`, requestData);
-                const { data: ingestDataResult } = await apiResponse.json();
-                if (ingestDataResult) {
-                    this.logger.log(`Successfully wrote staked value for ${project}: ${stakedValueSum.toString()}`);
-                } else {
-                    this.logger.error(`Error while writing staked value for ${project}`);
+        try {
+            stakingAddresses = await service.getStakingAddresses();
+            for (const address of stakingAddresses) {
+                if (batchIterations % this.BATCH_API_REQUEST_SIZE === 0) {
+                    const stakedValue = await service.getAddressStake(address);
+                    stakedValueSum = stakedValueSum.plus(stakedValue?.stake || 0);
+                    await new Promise(resolve => setTimeout(resolve, this.API_SLEEP_TIME));
+                    console.log(`Batch ${batchIterations} executed`);
                 }
-            } catch (e) {
-                this.logger.error(`Error while writing staked value for ${project}: ${e}`);
+                batchIterations++;
             }
+        } catch (e) {
+            throw new Error(`Error while processing staked value for ${project}: ${e}`);
+        }
+        return { stakedValueSum, stakingAddresses };
+    }
+
+    async writeData(project: AvailableProjects, key: string, value: string) {
+        try {
+            const query = graphqlQuery(project, key, value);
+            const requestData = {
+                "method": "POST",
+                "headers": { "content-type": "application/json" },
+                "body": JSON.stringify(query),
+            };
+
+            const apiResponse = await fetch(`${this.apiConfigService.getDataApiUrl()}/graphql`, requestData);
+            const { data: ingestDataResult } = await apiResponse.json();
+            if (ingestDataResult) {
+                this.logger.log(`Successfully wrote ${key}: ${value} for ${project}`);
+            } else {
+                this.logger.error(`Error while writing data for ${project}`);
+            }
+        } catch (e) {
+            this.logger.error(`Error while writing data for ${project}: ${e}`);
         }
     }
 }
