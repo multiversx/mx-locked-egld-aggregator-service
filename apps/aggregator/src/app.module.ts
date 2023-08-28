@@ -5,10 +5,11 @@ import { ApiConfigModule, ApiMetricsModule, DynamicModuleUtils, HealthCheckModul
 import { ProjectsModule } from '../../projects';
 import { ModuleFactory } from "./module-factory";
 import { DataApiIndexerService } from './data-api.indexer.service';
-// import { DataApiWritesService } from './data-api.writes.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     LoggingModule,
     ApiConfigModule,
     DynamicModuleUtils.getApiModule(),

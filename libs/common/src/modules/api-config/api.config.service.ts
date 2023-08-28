@@ -62,6 +62,10 @@ export class ApiConfigService implements ApiConfigService {
     return this.getGenericConfig('urls.api');
   }
 
+  getDataApiUrl(): string {
+    return this.getGenericConfig('urls.dataApi');
+  }
+
   getGatewayUrl(): string {
     return this.getGenericConfig('urls.gateway');
   }
