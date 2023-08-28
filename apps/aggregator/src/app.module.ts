@@ -6,7 +6,6 @@ import { ProjectsModule } from '../../projects';
 import { ModuleFactory } from "./module-factory";
 import { DataApiIndexerService } from './data-api.indexer.service';
 import { ScheduleModule } from '@nestjs/schedule';
-
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -19,7 +18,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ModuleFactory,
   ],
   providers: [
-    DataApiIndexerService
-  ]
+    DataApiIndexerService,
+  ],
 })
 export class AppModule { }

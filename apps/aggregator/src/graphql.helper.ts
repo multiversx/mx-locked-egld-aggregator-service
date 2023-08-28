@@ -16,9 +16,9 @@ export const graphqlQuery = (project: string, stakedValueSum: BigNumber) => {
                     series: project,
                     key: "stakedValue",
                     value: stakedValueSum.toString(),
-                }
-            ]
-        }
-    }
-}
+                },
+            ],
+        },
+    };
+};
 

@@ -45,7 +45,7 @@ export class DataApiIndexerService {
                 const requestData = {
                     "method": "POST",
                     "headers": { "content-type": "application/json" },
-                    "body": JSON.stringify(query)
+                    "body": JSON.stringify(query),
                 };
 
                 const apiResponse = await fetch(`${this.apiConfigService.getDataApiUrl()}/graphql`, requestData);
