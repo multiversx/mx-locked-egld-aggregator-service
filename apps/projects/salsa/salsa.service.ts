@@ -9,9 +9,14 @@ export class SalsaService implements ProjectsInterface {
         private readonly apiService: ApiService,
         private readonly apiConfigService: ApiConfigService,
     ) { }
+
     async getAddressStake(address: string): Promise<{ stake: string } | null> {
-        const { data: accountData } = await this.apiService.get(`${this.apiConfigService.getApiUrl()}/accounts/${address}/tokens/${this.tokenName}?fields=balance`);
-        return { stake: accountData.balance };
+        try {
+            const { data: accountData } = await this.apiService.get(`${this.apiConfigService.getApiUrl()}/accounts/${address}/tokens/${this.tokenName}?fields=balance`);
+            return { stake: accountData.balance };
+        } catch (e) {
+            throw new Error(`Error at getting address stake ${e}`);
+        }
     }
 
     async getStakingAddresses(): Promise<string[]> {

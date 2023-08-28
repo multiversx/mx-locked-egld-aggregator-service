@@ -2,9 +2,9 @@ export class SlackMessage {
   title: string = '';
   attachments: any[] = [];
 
-  static buildIngesterErrorMessage(ingesterName: string, network: string) {
+  static buildIndexerErrorMessage(project: string, network: string) {
     const message = new SlackMessage();
-    message.title = `${ingesterName} - Could not process ingester`;
+    message.title = `${project} - Could not process project indexing`;
     message.attachments = [
       {
         color: '#e01e5a',
@@ -13,7 +13,7 @@ export class SlackMessage {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `*[${network.toUpperCase()}] ${ingesterName}* - Could not process ingester`,
+              text: `*[${network.toUpperCase()}] ${project}* - Could not index project data`,
             },
           },
         ],
@@ -22,13 +22,13 @@ export class SlackMessage {
     return message;
   }
 
-  static buildIngesterWarningMessage(
-    ingesterName: string,
+  static buildIndexerWarningMessage(
+    project: string,
     warnings: string[],
     network: string,
   ) {
     const message = new SlackMessage();
-    message.title = `${ingesterName} - Found ${warnings.length} data warnings`;
+    message.title = `${project} - Found ${warnings.length} data warnings`;
     message.attachments = [
       {
         color: '#ecb22e',
@@ -37,9 +37,8 @@ export class SlackMessage {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `*[${network.toUpperCase()}] ${ingesterName}* - Found ${
-                warnings.length
-              } data warnings`,
+              text: `*[${network.toUpperCase()}] ${project}* - Found ${warnings.length
+                } data warnings`,
             },
           },
           {

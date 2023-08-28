@@ -23,7 +23,7 @@ describe('Projects service testing', () => {
     let batchIterations = 0;
     let apiConfigService: ApiConfigService;
     beforeAll(() => {
-        const module: AvailableProjects = process.env.MODULE_NAME as AvailableProjects || AvailableProjects.Sample; // default to 'Sample' if no env provided
+        const module: AvailableProjects = process.env.MODULE_NAME as AvailableProjects || AvailableProjects.Dummy; // default to 'Sample' if no env provided
         service = ModuleFactory.getService(module);
         const configService = new ConfigService(configuration());
         apiConfigService = new ApiConfigService(configService);

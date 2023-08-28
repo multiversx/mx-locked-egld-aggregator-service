@@ -7,6 +7,10 @@ import { SalsaModule, SalsaService } from "./salsa";
     DummyModule,
     SalsaModule,
   ],
+  providers: [
+      DummyService,
+      SalsaService,
+  ],
   exports: [
     DummyService,
     SalsaService,
