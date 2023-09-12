@@ -13,13 +13,10 @@ function isCloseTo(value1: number, value2: number, margin = 10) {
 }
 
 describe('Projects service testing', () => {
-    const ACCEPTABLE_PERCENTAGE_DIFFERENCE = 10;
-    const API_SLEEP_TIME = 10000;
-    const BATCH_API_REQUEST_SIZE = 10;
-
-    let service: any;
     let batchIterations = 0;
+    let service: any;
     let apiConfigService: ApiConfigService;
+
     beforeAll(async () => {
         const { provider } = parseArgs(process.argv);
 
@@ -52,7 +49,6 @@ describe('Projects service testing', () => {
         service = moduleRef.get('LIQUID_STAKING_SERVICE_PROVIDER');
     });
 
-
     it('should be defined', () => {
         expect(service).toBeDefined();
         expect(service).toHaveProperty('getAddressStake');
@@ -80,6 +76,9 @@ describe('Projects service testing', () => {
     });
 
     it('should check the total staked amount is equal to the sum of all staking addresses', async () => {
+        const API_SLEEP_TIME = apiConfigService.getTestConfigApiSleepTime();
+        const BATCH_API_REQUEST_SIZE = apiConfigService.getTestConfigBatchApiRequestSize();
+
         const contractAddresses = await service.getStakingContracts();
         const stakingAddresses = await service.getStakingAddresses();
         let contractSum = new BigNumber(0);
@@ -113,6 +112,8 @@ describe('Projects service testing', () => {
             console.log(`Address sum: ${denominatedAddressSum}`);
             expect(denominatedContractSum).toBeGreaterThan(0);
             expect(denominatedAddressSum).toBeGreaterThan(0);
+
+            const ACCEPTABLE_PERCENTAGE_DIFFERENCE = apiConfigService.getTestConfigAcceptablePercentageDifference();
             expect(isCloseTo(denominatedContractSum, denominatedAddressSum, ACCEPTABLE_PERCENTAGE_DIFFERENCE)).toBe(true);
         }
     }, 1000000);

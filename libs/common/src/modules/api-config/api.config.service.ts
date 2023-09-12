@@ -70,6 +70,18 @@ export class ApiConfigService implements ApiConfigService {
     return this.getGenericConfig('urls.gateway');
   }
 
+  getTestConfigAcceptablePercentageDifference(): number {
+    return this.getGenericConfig('testConfig.acceptablePercentageDifference', { defaultValue: 5 });
+  }
+
+  getTestConfigApiSleepTime(): number {
+    return this.getGenericConfig('testConfig.apiSleepTime', { defaultValue: 10000 });
+  }
+
+  getTestConfigBatchApiRequestSize(): number {
+    return this.getGenericConfig('testConfig.batchApiRequestSize', { defaultValue: 10 });
+  }
+
   getGenericConfig<T>(key: string, options?: { defaultValue: T }): T {
     const config = this.config.get<T>(key);
 

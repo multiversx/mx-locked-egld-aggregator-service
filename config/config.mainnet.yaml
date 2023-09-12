@@ -1,4 +1,4 @@
-network: devnet
+network: mainnet
 apps:
   api:
     port: 3001
@@ -6,9 +6,9 @@ apps:
   aggregator:
     port: 5002
 urls:
-  api: 'https://devnet-api.multiversx.com'
-  gateway: 'https://devnet-gateway.multiversx.com'
-  elastic: 'https://devnet-index.multiversx.com'
+  api: 'https://api.multiversx.com'
+  gateway: 'https://gateway.multiversx.com'
+  elastic: 'https://index.multiversx.com'
 keepAliveTimeout:
   downstream: 61000
   upstream: 60000
@@ -18,3 +18,4 @@ testConfig:
   acceptablePercentageDifference: 10
   apiSleepTime: 10000
   batchApiRequestSize: 10
+
