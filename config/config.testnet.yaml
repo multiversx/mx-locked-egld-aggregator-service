@@ -1,10 +1,4 @@
 network: testnet
-apps:
-  api:
-    port: 3001
-    prefix: 'data-api/v2'
-  aggregator:
-    port: 5002
 urls:
   api: 'https://testnet-api.multiversx.com'
   gateway: 'https://testnet-gateway.multiversx.com'
@@ -18,4 +12,3 @@ testConfig:
   acceptablePercentageDifference: 10
   apiSleepTime: 10000
   batchApiRequestSize: 10
-

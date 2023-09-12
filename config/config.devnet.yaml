@@ -1,10 +1,4 @@
 network: devnet
-apps:
-  api:
-    port: 3001
-    prefix: 'data-api/v2'
-  aggregator:
-    port: 5002
 urls:
   api: 'https://devnet-api.multiversx.com'
   gateway: 'https://devnet-gateway.multiversx.com'
