@@ -14,6 +14,9 @@
     "start:aggregator:custom": "npm run copy-custom-config && npm run copy-assets && TZ=UTC nest start aggregator",
     "start:aggregator:custom:debug": "npm run copy-custom-config && npm run copy-assets && TZ=UTC nest start aggregator --watch --debug",
     "test:module": "npm run copy-custom-config && npm run copy-assets && TZ=UTC && MODULE_NAME=$npm_config_module jest",
+    "test:module:mainnet": "npm run copy-mainnet-config && npm run copy-assets && TZ=UTC && MODULE_NAME=$npm_config_module jest",
+    "test:module:devnet": "npm run copy-devnet-config && npm run copy-assets && TZ=UTC && MODULE_NAME=$npm_config_module jest",
+    "test:module:testnet": "npm run copy-testnet-config && npm run copy-assets && TZ=UTC && MODULE_NAME=$npm_config_module jest",
     "test:module:salsa": "npm run copy-custom-config && npm run copy-assets && TZ=UTC && MODULE_NAME=salsa jest",
     "copy-config": "run-script-os",
     "lint": "eslint \"{apps,libs}/**/*.ts\"",
@@ -26,7 +29,9 @@
     "migration:generate": "yarn build:timescaledb && ts-node ./scripts/migrations/generate-migration.ts",
     "migration:run": "yarn build:timescaledb && yarn typeormcli:config migration:run",
     "copy-assets": "cpx config/config.yaml dist/config/",
-    "copy-custom-config": "cp ./config/config.custom.yaml ./config/config.yaml"
+    "copy-mainnet-config": "cp ./config/config.mainnet.yaml ./config/config.yaml",
+    "copy-devnet-config": "cp ./config/config.devnet.yaml ./config/config.yaml",
+    "copy-testnet-config": "cp ./config/config.testnet.yaml ./config/config.yaml"
   },
   "dependencies": {
     "@multiversx/sdk-exchange": "^0.2.17",

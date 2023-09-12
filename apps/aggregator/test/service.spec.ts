@@ -15,20 +15,18 @@ function isCloseTo(value1: number, value2: number, margin = 10) {
 }
 
 describe('Projects service testing', () => {
-    const ACCEPTABLE_PERCENTAGE_DIFFERENCE = 10;
-    const API_SLEEP_TIME = 10000;
-    const BATCH_API_REQUEST_SIZE = 10;
+    const configService = new ConfigService(configuration());
+    const apiConfigService = new ApiConfigService(configService);
 
-    let service: ProjectsInterface;
+    const ACCEPTABLE_PERCENTAGE_DIFFERENCE = apiConfigService.getTestConfigAcceptablePercentageDifference();
+    const API_SLEEP_TIME = apiConfigService.getTestConfigApiSleepTime();
+    const BATCH_API_REQUEST_SIZE = apiConfigService.getTestConfigBatchApiRequestSize();
+
+    const module: AvailableProjects = process.env.MODULE_NAME as AvailableProjects;
+    if (!module) throw new Error(`Module name is required.`);
+    const service: ProjectsInterface = ModuleFactory.getService(module);
+
     let batchIterations = 0;
-    let apiConfigService: ApiConfigService;
-    beforeAll(() => {
-        const module: AvailableProjects = process.env.MODULE_NAME as AvailableProjects || AvailableProjects.Dummy; // default to 'Sample' if no env provided
-        service = ModuleFactory.getService(module);
-        const configService = new ConfigService(configuration());
-        apiConfigService = new ApiConfigService(configService);
-    });
-
 
     it('should be defined', () => {
         expect(service).toBeDefined();

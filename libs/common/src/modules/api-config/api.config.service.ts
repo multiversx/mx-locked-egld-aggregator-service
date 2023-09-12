@@ -45,11 +45,6 @@ export class ApiConfigService implements ApiConfigService {
     return this.getServerTimeout() + 1000;
   }
 
-  getSlackWebhookUrl(): string | null {
-    return this.getGenericConfig('slack.webhookUrl', { defaultValue: null });
-  }
-
-
   getElasticUrl(): string {
     return this.getGenericConfig('urls.elastic');
   }
@@ -68,6 +63,18 @@ export class ApiConfigService implements ApiConfigService {
 
   getGatewayUrl(): string {
     return this.getGenericConfig('urls.gateway');
+  }
+
+  getTestConfigAcceptablePercentageDifference(): number {
+    return this.getGenericConfig('testConfig.acceptablePercentageDifference', { defaultValue: 5 });
+  }
+
+  getTestConfigApiSleepTime(): number {
+    return this.getGenericConfig('testConfig.apiSleepTime', { defaultValue: 10000 });
+  }
+
+  getTestConfigBatchApiRequestSize(): number {
+    return this.getGenericConfig('testConfig.batchApiRequestSize', { defaultValue: 10 });
   }
 
   getGenericConfig<T>(key: string, options?: { defaultValue: T }): T {

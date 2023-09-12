@@ -13,7 +13,7 @@ If you wish to have your data aggregated and made available through this reposit
 5. **Testing Your Implementation**: Before submitting a pull request, run the tests to ensure your implementation adheres to expected behaviors:
 
 ```bash
-npm run test:module --module=YOUR_MODULE_NAME (lowercase reccomended)
+npm run test:module --module=YOUR_MODULE_NAME (lowercase reccomended, use npm and not yarn)
 ```
 
 6. **Submit a Pull Request (PR)**: Once you've made the necessary changes and ensured that your implementation is correct, you can propose these changes to be merged into the main repository. Go to the main page of your forked repository, and click 'New Pull Request'. Fill in the necessary details, and then submit the PR.
@@ -35,7 +35,17 @@ The project's structure is crucial for maintaining order, readability, and scala
 To run the tests for a specific module from `package.json`, use the following command:
 
 ```bash
- npm run test:module --module=YOUR_MODULE_NAME
+ npm run test:module --module=YOUR_MODULE_NAME (use npm, not yarn)
 ```
-
 Ensure that you replace `YOUR_MODULE_NAME` with the name of your module. Keep in mind that is case sensitive.
+
+### Changing data fetching configs
+
+- You can set different parameters such as sleep time (`apiSleepTime`) between batches calls (`batchApiRequestSize`) to multiversx API.
+- Find and change this data in ```config/config.NETWORK.ts``` file:
+  - testConfig:
+     - acceptablePercentageDifference: 10
+     - apiSleepTime: 10000
+     - batchApiRequestSize: 10
+
+
