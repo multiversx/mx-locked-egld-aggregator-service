@@ -1,12 +1,10 @@
-import { ModuleFactory } from "../src/module-factory";
 import * as process from "process";
 import BigNumber from 'bignumber.js';
-import { ApiConfigService } from "@libs/common";
-import configuration from '../../../config/configuration';
-import { ConfigService } from "@nestjs/config";
+import { ApiConfigModule, ApiConfigService, DynamicModuleUtils } from "@libs/common";
 import { LiquidStakingProviders } from "../../providers";
 import parseArgs from 'minimist';
 const request = require('supertest');
+import { Test } from '@nestjs/testing';
 
 function isCloseTo(value1: number, value2: number, margin = 10) {
     const difference = Math.abs(value1 - value2);
@@ -22,16 +20,36 @@ describe('Projects service testing', () => {
     let service: any;
     let batchIterations = 0;
     let apiConfigService: ApiConfigService;
-    beforeAll(() => {
-        const args = parseArgs(process.argv);
+    beforeAll(async () => {
+        const { provider } = parseArgs(process.argv);
 
-        if (!args.provider) {
+        if (!provider) {
             throw new Error('Provide a provider name');
         }
 
-        service = ModuleFactory.getService(args.provider as LiquidStakingProviders);
-        const configService = new ConfigService(configuration());
-        apiConfigService = new ApiConfigService(configService);
+        if (!Object.values(LiquidStakingProviders).includes(provider)) {
+            throw new Error(`Provider ${provider} was not found, check that your provider is added in the LiquidStakingProviders enum.`);
+        }
+
+        const serviceClasses = require(`../../providers/${provider}`);
+        const serviceClass = Object.values(serviceClasses)[0] as any;
+
+        const moduleRef = await Test.createTestingModule({
+            imports: [
+                ApiConfigModule,
+                DynamicModuleUtils.getApiModule(),
+                DynamicModuleUtils.getElasticModule(),
+            ],
+            providers: [
+                {
+                    provide: 'LIQUID_STAKING_SERVICE_PROVIDER',
+                    useClass: serviceClass,
+                },
+            ],
+        }).compile();
+
+        apiConfigService = moduleRef.get(ApiConfigService);
+        service = moduleRef.get('LIQUID_STAKING_SERVICE_PROVIDER');
     });
 
 

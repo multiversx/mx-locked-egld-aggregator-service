@@ -1,32 +1,40 @@
 import { Module } from '@nestjs/common';
 import { ApiModuleOptions, ApiService } from "@multiversx/sdk-nestjs-http";
 import { MetricsService } from "@multiversx/sdk-nestjs-monitoring";
-import { ApiConfigService } from '@libs/common';
+import { ApiConfigModule, ApiConfigService, DynamicModuleUtils } from '@libs/common';
 import configuration from '../../../../config/configuration';
 import { ConfigService } from '@nestjs/config';
 import { LiquidStakingProviders } from '../../../providers';
+import { NestFactory } from '@nestjs/core';
+import { ElasticService } from '@multiversx/sdk-nestjs-elastic';
 
 @Module({})
 export class ModuleFactory {
     static rootPath = '../../../providers';
 
-    static getService(projectName: LiquidStakingProviders): LiquidStakingProviders {
+    static async getService(projectName: LiquidStakingProviders): Promise<LiquidStakingProviders> {
         if (!Object.values(LiquidStakingProviders).includes(projectName)) {
             throw new Error(`Provider ${projectName} was not found, check that your provider is added in the LiquidStakingProviders enum.`);
         }
 
-        const serviceName = `${projectName.charAt(0).toUpperCase() + projectName.slice(1)}Service`;
-        const services = require(`${this.rootPath}/${projectName}/${projectName}.service`);
+        const services = require(`${this.rootPath}/${projectName}`);
+        const ServiceClass = Object.values(services)[0] as any;
 
-        if (services && services[`${serviceName}`]) {
-            const ServiceClass = services[`${serviceName}`];
+        if (ServiceClass) {
+            const app = await NestFactory.create({
+                imports: [
+                    ApiConfigModule,
+                    DynamicModuleUtils.getElasticModule(),
+                ],
+            });
             const apiModuleOptions = new ApiModuleOptions();
             const metricsService = new MetricsService();
             const apiService = new ApiService(apiModuleOptions, metricsService);
             const configService = new ConfigService(configuration());
             const apiConfigService = new ApiConfigService(configService);
-            return new ServiceClass(apiService, apiConfigService);
+            const elasticService = app.get<ElasticService>(ElasticService);
+            return new ServiceClass(apiConfigService, apiService, elasticService); // TODO add elastic
         }
-        throw new Error(`Service ${serviceName} not found.`);
+        throw new Error(`Provider implementation not found.`);
     }
 }
