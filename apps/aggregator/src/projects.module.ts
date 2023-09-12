@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
-import { DummyModule, DummyService } from './dummy';
-import { SalsaModule, SalsaService } from "./salsa";
+import { DummyModule, DummyService, SalsaModule, SalsaService } from 'apps/providers';
 
 @Module({
   imports: [
@@ -8,8 +7,8 @@ import { SalsaModule, SalsaService } from "./salsa";
     SalsaModule,
   ],
   providers: [
-      DummyService,
-      SalsaService,
+    DummyService,
+    SalsaService,
   ],
   exports: [
     DummyService,

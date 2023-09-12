@@ -1,17 +1,20 @@
 import { Module } from '@nestjs/common';
-import { ProjectsInterface } from "../../../projects";
-import { AvailableProjects } from "../../../projects";
 import { ApiModuleOptions, ApiService } from "@multiversx/sdk-nestjs-http";
 import { MetricsService } from "@multiversx/sdk-nestjs-monitoring";
 import { ApiConfigService } from '@libs/common';
 import configuration from '../../../../config/configuration';
 import { ConfigService } from '@nestjs/config';
+import { LiquidStakingProviders } from '../../../providers';
+
 @Module({})
 export class ModuleFactory {
-    static rootPath = '../../../projects';
-    static getService(projectName: AvailableProjects): ProjectsInterface {
-        if (!projectName) throw new Error(`Project name is required.`);
-        if (!Object.values(AvailableProjects).includes(projectName)) throw new Error(`Project ${projectName} not found, check that projectName is added in AvailableProjects.`);
+    static rootPath = '../../../providers';
+
+    static getService(projectName: LiquidStakingProviders): LiquidStakingProviders {
+        if (!Object.values(LiquidStakingProviders).includes(projectName)) {
+            throw new Error(`Provider ${projectName} was not found, check that your provider is added in the LiquidStakingProviders enum.`);
+        }
+
         const serviceName = `${projectName.charAt(0).toUpperCase() + projectName.slice(1)}Service`;
         const services = require(`${this.rootPath}/${projectName}/${projectName}.service`);
 

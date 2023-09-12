@@ -2,10 +2,11 @@
 import { Module } from '@nestjs/common';
 import { LoggingModule } from '@multiversx/sdk-nestjs-common';
 import { AlertsModule, ApiConfigModule, ApiMetricsModule, DynamicModuleUtils, HealthCheckModule } from '@libs/common';
-import { ProjectsModule } from '../../projects';
 import { ModuleFactory } from "./module-factory";
 import { DataApiIndexerService } from './data-api.indexer.service';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ProjectsModule } from './projects.module';
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),

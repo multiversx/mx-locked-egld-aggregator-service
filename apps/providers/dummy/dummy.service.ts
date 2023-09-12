@@ -1,8 +1,8 @@
+import { LiquidStakingProviderInterface } from '@libs/common';
 import { Injectable } from '@nestjs/common';
-import { ProjectsInterface } from "../projects.interface";
 
 @Injectable()
-export class DummyService implements ProjectsInterface {
+export class DummyService implements LiquidStakingProviderInterface {
     constructor() { }
     public getAddressStake(_address: string): Promise<{ stake: string }> {
         return Promise.resolve({ stake: "" });

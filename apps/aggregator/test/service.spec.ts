@@ -1,11 +1,11 @@
-import { ProjectsInterface } from "../src";
 import { ModuleFactory } from "../src/module-factory";
 import * as process from "process";
-import { AvailableProjects } from "../../projects";
 import BigNumber from 'bignumber.js';
 import { ApiConfigService } from "@libs/common";
 import configuration from '../../../config/configuration';
 import { ConfigService } from "@nestjs/config";
+import { LiquidStakingProviders } from "../../providers";
+import parseArgs from 'minimist';
 const request = require('supertest');
 
 function isCloseTo(value1: number, value2: number, margin = 10) {
@@ -19,12 +19,17 @@ describe('Projects service testing', () => {
     const API_SLEEP_TIME = 10000;
     const BATCH_API_REQUEST_SIZE = 10;
 
-    let service: ProjectsInterface;
+    let service: any;
     let batchIterations = 0;
     let apiConfigService: ApiConfigService;
     beforeAll(() => {
-        const module: AvailableProjects = process.env.MODULE_NAME as AvailableProjects || AvailableProjects.Dummy; // default to 'Sample' if no env provided
-        service = ModuleFactory.getService(module);
+        const args = parseArgs(process.argv);
+
+        if (!args.provider) {
+            throw new Error('Provide a provider name');
+        }
+
+        service = ModuleFactory.getService(args.provider as LiquidStakingProviders);
         const configService = new ConfigService(configuration());
         apiConfigService = new ApiConfigService(configService);
     });
@@ -88,6 +93,8 @@ describe('Projects service testing', () => {
             const denominatedAddressSum = addressSum.shiftedBy(-18).toNumber();
             console.log(`Contract sum: ${denominatedContractSum}`);
             console.log(`Address sum: ${denominatedAddressSum}`);
+            expect(denominatedContractSum).toBeGreaterThan(0);
+            expect(denominatedAddressSum).toBeGreaterThan(0);
             expect(isCloseTo(denominatedContractSum, denominatedAddressSum, ACCEPTABLE_PERCENTAGE_DIFFERENCE)).toBe(true);
         }
     }, 1000000);

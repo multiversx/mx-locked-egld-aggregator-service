@@ -1,9 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { ProjectsInterface } from "../projects.interface";
 import { ApiService } from "@multiversx/sdk-nestjs-http";
-import { ApiConfigService } from "@libs/common";
+import { ApiConfigService, LiquidStakingProviderInterface } from "@libs/common";
 @Injectable()
-export class SalsaService implements ProjectsInterface {
+export class SalsaService implements LiquidStakingProviderInterface {
     tokenName = 'LEGLD-d74da9';
     constructor(
         private readonly apiService: ApiService,
@@ -13,6 +12,7 @@ export class SalsaService implements ProjectsInterface {
     async getAddressStake(address: string): Promise<{ stake: string } | null> {
         try {
             const { data: accountData } = await this.apiService.get(`${this.apiConfigService.getApiUrl()}/accounts/${address}/tokens/${this.tokenName}?fields=balance`);
+            // TODO get SEGLD price
             return { stake: accountData.balance };
         } catch (e) {
             throw new Error(`Error at getting address stake ${e}`);
