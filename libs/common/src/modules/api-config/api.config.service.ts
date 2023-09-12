@@ -45,6 +45,11 @@ export class ApiConfigService implements ApiConfigService {
     return this.getServerTimeout() + 1000;
   }
 
+  getSlackWebhookUrl(): string | null {
+    return this.getGenericConfig('slack.webhookUrl', { defaultValue: null });
+  }
+
+
   getElasticUrl(): string {
     return this.getGenericConfig('urls.elastic');
   }
