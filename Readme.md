@@ -6,55 +6,80 @@
 
 If you wish to have your data aggregated and made available through this repository:
 
-1. **Fork the Repository**: Click the 'Fork' button at the top right of this repository's page. This will create a copy of this repository in your GitHub account.
+1. **Fork the Repository**
 
-2. **Install dependencies**:
+Click the 'Fork' button at the top right of this repository's page. This will create a copy of this repository in your GitHub account.
+
+2. **Install**
+
+Once you have forked and cloned the project, you can install the Node dependencies by running the following command in the project directory:
 
 ```bash
 yarn install
 ```
 
-3. **Add new project to `AvailableProjects`**: In the `apps/projects/available-projects.ts` file, add a new entry for your project. This will allow to create a new instance of your project's module. Lowercase is recommended for the project name.
+_We recommend you to use [yarn](https://yarnpkg.com/) as a package manager._
 
-4. **Create a new module**: Create a new folder in the `apps/projects` directory. The name of the folder should be lowercase, module should follow the pattern `YOUR_MODULE_NAME.module.ts`, service should be `YOUR_MODULE_NAME.service.ts` and exposed in `index.ts` This folder will contain all the code for your module.
+2. **Add new provider to the `LiquidStakingProviders` enum**
 
-5. **Implement the Projects Interface**: Ensure you service implements the `ProjectsInterface`. This interface serves as a blueprint for ensuring consistency and integrity of data across all modules.
+To create a new instance of your provider's class when taking a snapshot of data, add a new value to the `LiquidStakingProviders` enum. The provider name should be lowercase.
 
-6. **Testing Your Implementation**: Before submitting a pull request, run the tests to ensure your implementation adheres to expected behaviors:
+3. **Create a new file for your provider**
+
+Create a new file within the `apps/projects` directory with a filename matching the value previously specified in the `LiquidStakingProviders` enum. Inside this file, define a class that implements the `LiquidStakingProviderInterface` interface.
+
+4. **Implement the `LiquidStakingProviderInterface`**
+
+To implement the `LiquidStakingProviderInterface`, you should create a class with methods that fulfill the interface's requirements.
+
+5. **Testing Your Implementation**
+
+Before submitting a pull request, run the tests to ensure your implementation adheres to expected behaviors:
 
 ```bash
-npm run test:module --module=YOUR_MODULE_NAME (lowercase reccomended, use npm and not yarn)
+yarn test:mainnet --provider=YOUR_PROVIDER_NAME
 ```
 
-7. **Submit a Pull Request (PR)**: Once you've made the necessary changes and ensured that your implementation is correct, you can propose these changes to be merged into the main repository. Go to the main page of your forked repository, and click 'New Pull Request'. Fill in the necessary details, and then submit the PR.
+6. **Submit a Pull Request (PR)**
 
-### Project Structure and Its Importance
+Once you've made the necessary changes and ensured that your implementation is correct, you can propose these changes to be merged into the main repository. Go to the main page of your forked repository, and click 'New Pull Request'. Fill in the necessary details, and then submit the PR.
+
+<!-- ### Project Structure and Its Importance
 
 The project's structure is crucial for maintaining order, readability, and scalability of the codebase. By following a standard pattern:
 
 - Developers can quickly understand and navigate the repository.
 - It ensures that data aggregation from different sources remains consistent.
 - Makes the testing and validation process streamlined.
-- It provides a clear roadmap for contributors to follow, leading to a smoother integration process.
+- It provides a clear roadmap for contributors to follow, leading to a smoother integration process. -->
 
 ## Testing your implementation
 
 ### Running Tests
 
-To run the tests for a specific module from `package.json`, use the following command:
+To run the tests for a specific environment, use the following commands:
 
 ```bash
- npm run test:module --module=YOUR_MODULE_NAME (use npm, not yarn)
+yarn test:devnet --provider=YOUR_PROVIDER_NAME # devnet
+
+yarn test:testnet --provider=YOUR_PROVIDER_NAME # testnet
+
+yarn test:mainnet --provider=YOUR_PROVIDER_NAME # mainnet
 ```
-Ensure that you replace `YOUR_MODULE_NAME` with the name of your module. Keep in mind that is case sensitive.
 
-### Changing data fetching configs
+Ensure that you replace `YOUR_PROVIDER_NAME` with the name of your module. Keep in mind that is case sensitive.
 
-- You can set different parameters such as sleep time (`apiSleepTime`) between batches calls (`batchApiRequestSize`) to multiversx API.
-- Find and change this data in ```config/config.NETWORK.ts``` file:
-  - testConfig:
-     - acceptablePercentageDifference: 10
-     - apiSleepTime: 10000
-     - batchApiRequestSize: 10
+## Troubleshooting
 
+- To validate data accuracy, we verify that the combined staked amount from contracts is close to the collective total of all staking addresses. It the test fails, you can increase the `acceptablePercentageDifference` threshold
 
+- To avoid hitting the rate limiter imposed by the public API, you have the option to fine-tune your settings to stay within the 2 requests per second (RPS) limit. To achieve this, consider modifying the `apiSleepTime` and `batchApiRequestSize` settings.
+
+- These settings can be found in the `config/config.<NETWORK>.yaml`:
+
+```yaml
+testConfig:
+  acceptablePercentageDifference: 10
+  apiSleepTime: 10000
+  batchApiRequestSize: 10
+```
