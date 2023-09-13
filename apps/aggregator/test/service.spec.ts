@@ -1,7 +1,6 @@
 import * as process from "process";
 import BigNumber from 'bignumber.js';
 import { ApiConfigModule, ApiConfigService, DynamicModuleUtils } from "@libs/common";
-import { LiquidStakingProviders } from "../../providers";
 import parseArgs from 'minimist';
 const request = require('supertest');
 import { Test } from '@nestjs/testing';
@@ -18,17 +17,17 @@ describe('Projects service testing', () => {
     let apiConfigService: ApiConfigService;
 
     beforeAll(async () => {
-        const { provider } = parseArgs(process.argv);
+        const { provider, network } = parseArgs(process.argv);
 
         if (!provider) {
             throw new Error('Provide a provider name');
         }
 
-        if (!Object.values(LiquidStakingProviders).includes(provider)) {
-            throw new Error(`Provider ${provider} was not found, check that your provider is added in the LiquidStakingProviders enum.`);
-        }
+        const serviceClassPath = network === 'mainnet' || network === 'custom'
+            ? `../../../providers/${provider}`
+            : `../../../providers/${network}/${provider}`;
 
-        const serviceClasses = require(`../../providers/${provider}`);
+        const serviceClasses = require(serviceClassPath);
         const serviceClass = Object.values(serviceClasses)[0] as any;
 
         const moduleRef = await Test.createTestingModule({
