@@ -44,15 +44,6 @@ yarn test:mainnet --provider=YOUR_PROVIDER_NAME
 
 Once you've made the necessary changes and ensured that your implementation is correct, you can propose these changes to be merged into the main repository. Go to the main page of your forked repository, and click 'New Pull Request'. Fill in the necessary details, and then submit the PR.
 
-<!-- ### Project Structure and Its Importance
-
-The project's structure is crucial for maintaining order, readability, and scalability of the codebase. By following a standard pattern:
-
-- Developers can quickly understand and navigate the repository.
-- It ensures that data aggregation from different sources remains consistent.
-- Makes the testing and validation process streamlined.
-- It provides a clear roadmap for contributors to follow, leading to a smoother integration process. -->
-
 ## Testing your implementation
 
 ### Running Tests

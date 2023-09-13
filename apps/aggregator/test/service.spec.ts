@@ -19,7 +19,7 @@ describe('Projects service testing', () => {
 
     beforeAll(async () => {
         const { provider } = parseArgs(process.argv);
-
+        console.log(parseArgs(process.argv));
         if (!provider) {
             throw new Error('Provide a provider name');
         }
