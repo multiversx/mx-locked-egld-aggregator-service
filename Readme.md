@@ -22,7 +22,7 @@ _We recommend you to use [yarn](https://yarnpkg.com/) as a package manager._
 
 3. **Create a new file for your provider**
 
-Create a new file within the `projects` directory. Inside this file, define a class that implements the `LiquidStakingProviderInterface` interface.
+Create a new file within the `providers` directory. Inside this file, define a class that implements the `LiquidStakingProviderInterface` interface.
 
 4. **Implement the `LiquidStakingProviderInterface`**
 
@@ -33,7 +33,7 @@ To implement the `LiquidStakingProviderInterface`, you should create a class wit
 Before submitting a pull request, run the tests to ensure your implementation adheres to expected behaviors:
 
 ```bash
-yarn test:mainnet --provider=YOUR_PROVIDER_NAME # replace YOUR_PROVIDER_NAME with your project file name
+yarn test:mainnet --provider=YOUR_PROVIDER_NAME # replace YOUR_PROVIDER_NAME with your provider file name
 ```
 
 6. **Submit a Pull Request (PR)**
