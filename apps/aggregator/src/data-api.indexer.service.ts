@@ -16,14 +16,12 @@ export class DataApiIndexerService {
     constructor(
         private readonly apiConfigService: ApiConfigService,
         private readonly alertsService: AlertsService,
-    ) {
-        this.indexData();
-    }
+    ) { }
 
     async getProviders(): Promise<string[]> {
         try {
             const files = await fs.readdir(this.PROVIDER_PATH);
-            const providers = files.filter((file: any) => file.includes('.ts'))
+            const providers = files.filter((file: any) => file.includes('.ts'));
             return providers;
         } catch (err) {
             this.logger.error(`Error while reading providers: ${err}`);
@@ -34,9 +32,7 @@ export class DataApiIndexerService {
     @Cron(CronExpression.EVERY_DAY_AT_3AM)
     async indexData() {
         const providers: string[] = await this.getProviders();
-        console.log(`Providers found: ${providers}`)
-        const service = await ModuleFactory.getService('example');
-        console.log(await service.getStakingContracts());
+        console.log(`Providers found: ${providers}`);
 
         for (const provider of providers) {
             try {
