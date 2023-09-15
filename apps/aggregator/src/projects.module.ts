@@ -1,18 +1,14 @@
+import { ApiConfigModule, DynamicModuleUtils } from '@libs/common';
 import { Module } from '@nestjs/common';
-import { DummyModule, DummyService, SalsaModule, SalsaService } from 'apps/providers';
 
 @Module({
   imports: [
-    DummyModule,
-    SalsaModule,
+    ApiConfigModule,
+    DynamicModuleUtils.getApiModule(),
   ],
   providers: [
-    DummyService,
-    SalsaService,
   ],
   exports: [
-    DummyService,
-    SalsaService,
   ],
 })
 export class ProjectsModule { }

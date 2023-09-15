@@ -1,42 +1,57 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AvailableProjects } from '.';
-import { AlertsService, ApiConfigService } from '@libs/common';
-import { ModuleFactory } from './module-factory';
-import BigNumber from 'bignumber.js';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ModuleFactory } from './module-factory';
 import { graphqlQuery } from './graphql.helper';
+import { AlertsService, ApiConfigService } from '@libs/common';
+import BigNumber from 'bignumber.js';
+const fs = require('fs').promises;
+const path = require('path');
 @Injectable()
 export class DataApiIndexerService {
     private readonly logger = new Logger(DataApiIndexerService.name);
     private readonly BATCH_API_REQUEST_SIZE = 10;
     private readonly API_SLEEP_TIME = 10000;
+    private readonly PROVIDER_PATH = path.resolve('./providers');
 
     constructor(
         private readonly apiConfigService: ApiConfigService,
         private readonly alertsService: AlertsService,
     ) { }
 
+    async getProviders(): Promise<string[]> {
+        try {
+            const files = await fs.readdir(this.PROVIDER_PATH);
+            const providers = files.filter((file: any) => file.includes('.ts'));
+            return providers;
+        } catch (err) {
+            this.logger.error(`Error while reading providers: ${err}`);
+            return [];
+        }
+    }
+
     @Cron(CronExpression.EVERY_DAY_AT_3AM)
     async indexData() {
-        const availableProjects = Object.values(AvailableProjects).filter((key) => key !== AvailableProjects.Dummy);
+        const providers: string[] = await this.getProviders();
+        console.log(`Providers found: ${providers}`);
 
-        for (const project of availableProjects) {
+        for (const provider of providers) {
             try {
-                const { stakedValueSum, stakingAddresses } = await this.fetchDataForProject(project);
-                await this.writeData(project, 'stakedValue', stakedValueSum.toString());
-                await this.writeData(project, 'stakingUsers', stakingAddresses.length.toString());
+                const providerName = provider.split('.')[0];
+                const { stakedValueSum, stakingAddresses } = await this.fetchDataForProject(providerName);
+                await this.writeData(provider, 'stakedValue', stakedValueSum.toString());
+                await this.writeData(provider, 'stakingUsers', stakingAddresses.length.toString());
             } catch (e) {
-                await this.alertsService.sendIndexerError(`Error while indexing data for ${project}: ${e}`);
-                this.logger.error(`Error while indexing data for ${project}: ${e}`);
+                await this.alertsService.sendIndexerError(`Error while indexing data for ${provider}: ${e}`);
+                this.logger.error(`Error while indexing data for ${provider}: ${e}`);
             }
         }
     }
 
-    async fetchDataForProject(project: AvailableProjects) {
+    async fetchDataForProject(project: string) {
         let stakedValueSum = new BigNumber(0);
         let batchIterations = 0;
         let stakingAddresses: string[] = [];
-        const service = ModuleFactory.getService(project as AvailableProjects);
+        const service = ModuleFactory.getService(project);
         this.logger.log(`Processing staked value for ${project}`);
 
         try {
@@ -56,7 +71,7 @@ export class DataApiIndexerService {
         return { stakedValueSum, stakingAddresses };
     }
 
-    async writeData(project: AvailableProjects, key: string, value: string) {
+    async writeData(project: string, key: string, value: string) {
         try {
             const query = graphqlQuery(project, key, value);
             const requestData = {

@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NetworkType } from '../../entities';
 
 @Injectable()
-export class ApiConfigService implements ApiConfigService {
+export class ApiConfigService {
   constructor(private readonly config: ConfigService) { }
 
   getNetwork(): NetworkType {
