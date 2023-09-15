@@ -42,7 +42,7 @@
       ],
       "@libs/timescaledb": [
         "libs/timescaledb/src"
-      ]
+      ],
     }
   }
 }
