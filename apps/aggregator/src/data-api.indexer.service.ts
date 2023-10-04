@@ -78,8 +78,8 @@ export class DataApiIndexerService {
             const query = graphqlQuery(project, key, value);
             const headers = {
                 "Authorization": this.apiConfigService.getDataApiToken(),
-                "Origin": this.apiConfigService.getOrigin()
-            }
+                "Origin": this.apiConfigService.getOrigin(),
+            };
             const { data: ingestDataResult } = await this.apiService.post(`${this.apiConfigService.getDataApiUrl()}/graphql`, query, { headers });
 
             if (ingestDataResult) {
