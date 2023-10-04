@@ -4,6 +4,7 @@ import { ModuleFactory } from './module-factory';
 import { graphqlQuery } from './graphql.helper';
 import { AlertsService, ApiConfigService } from '@libs/common';
 import BigNumber from 'bignumber.js';
+import { ApiService } from '@multiversx/sdk-nestjs-http';
 const fs = require('fs').promises;
 const path = require('path');
 @Injectable()
@@ -16,6 +17,7 @@ export class DataApiIndexerService {
     constructor(
         private readonly apiConfigService: ApiConfigService,
         private readonly alertsService: AlertsService,
+        private readonly apiService: ApiService
     ) { }
 
     async getProviders(): Promise<string[]> {
@@ -74,14 +76,12 @@ export class DataApiIndexerService {
     async writeData(project: string, key: string, value: string) {
         try {
             const query = graphqlQuery(project, key, value);
-            const requestData = {
-                "method": "POST",
-                "headers": { "content-type": "application/json" },
-                "body": JSON.stringify(query),
-            };
+            const headers = {
+                "Authorization": this.apiConfigService.getDataApiToken(),
+                "Origin": this.apiConfigService.getOrigin()
+            }
+            const { data: ingestDataResult } = await this.apiService.post(`${this.apiConfigService.getDataApiUrl()}/graphql`, query, { headers });
 
-            const apiResponse = await fetch(`${this.apiConfigService.getDataApiUrl()}/graphql`, requestData);
-            const { data: ingestDataResult } = await apiResponse.json();
             if (ingestDataResult) {
                 this.logger.log(`Successfully wrote ${key}: ${value} for ${project}`);
             } else {

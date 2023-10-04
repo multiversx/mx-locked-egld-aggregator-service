@@ -82,6 +82,14 @@ export class ApiConfigService {
     return this.getGenericConfig('testConfig.batchApiRequestSize', { defaultValue: 10 });
   }
 
+  getDataApiToken(): string {
+    return this.getGenericConfig('tokens.dataApi');
+  }
+
+  getOrigin(): string {
+    return this.getGenericConfig('origin');
+  }
+
   getGenericConfig<T>(key: string, options?: { defaultValue: T }): T {
     const config = this.config.get<T>(key);
 
