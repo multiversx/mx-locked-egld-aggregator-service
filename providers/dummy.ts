@@ -4,6 +4,11 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class DummyProvider implements LiquidStakingProviderInterface {
     constructor() { }
+
+    init(): Promise<void> {
+        return Promise.resolve();
+    }
+
     public getAddressStake(_address: string): Promise<{ stake: string }> {
         return Promise.resolve({ stake: "0" });
     }

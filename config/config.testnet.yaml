@@ -6,6 +6,9 @@ urls:
 keepAliveTimeout:
   downstream: 61000
   upstream: 60000
+api:
+  port: 3000
+  prefix: 'liquid-staking-aggregator'
 flags:
   useKeepAliveAgent: true
 testConfig:

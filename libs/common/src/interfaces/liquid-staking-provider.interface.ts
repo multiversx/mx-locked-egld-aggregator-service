@@ -1,5 +1,10 @@
 export interface LiquidStakingProviderInterface {
     /**
+     * Handled the initialization of the providers (fetch configuration, parity and so on)
+     */
+    init(): Promise<void>;
+
+    /**
      * Returns the list of the provider's staking contracts
      */
     getStakingContracts(): Promise<string[]>;
