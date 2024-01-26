@@ -2,7 +2,11 @@ network: devnet
 urls:
   api: 'https://devnet-api.multiversx.com'
   gateway: 'https://devnet-gateway.multiversx.com'
-  elastic: 'https://devnet-index.multiversx.com'
+elastic:
+  url: 'https://devnet-index.multiversx.com'
+  username: ''
+  password: ''
+  indexPrefix: 'accounts-000001'
 keepAliveTimeout:
   downstream: 61000
   upstream: 60000

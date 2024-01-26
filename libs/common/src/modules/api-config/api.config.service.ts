@@ -51,7 +51,11 @@ export class ApiConfigService implements ApiConfigService {
 
 
   getElasticUrl(): string {
-    return this.getGenericConfig('urls.elastic');
+    return this.getGenericConfig('elastic.url');
+  }
+
+  getElasticIndexPrefix(): string {
+    return this.getGenericConfig('elastic.indexPrefix');
   }
 
   getInternalElasticUrl(): string {

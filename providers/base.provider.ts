@@ -7,12 +7,11 @@ import { Injectable } from '@nestjs/common';
 export class BaseProvider {
   //timeCoordinates: TimeCoordinates;
   constructor(
-    //timeCoordinates: TimeCoordinates,
+    //timeCoordinates: TimeCoordinates, // TODO: set time coordinates so it can be used for historical indexing
     private readonly apiService: ApiService,
     private readonly apiConfigService: ApiConfigService,
   ) {
     //this.timeCoordinates = timeCoordinates;
-    console.log(`Base provider initialized. api port: ${apiConfigService.getApiPort()}. ${apiService}.`);
   }
 
   // getTimeCoordinates(): TimeCoordinates {
@@ -25,10 +24,5 @@ export class BaseProvider {
 
   getApiConfigService(): ApiConfigService {
     return this.apiConfigService;
-  }
-
-  get(): string {
-    return "";
-    //return `params: {timeCoordinates: epoch: ${this.timeCoordinates.epoch}, timestamp: ${this.timeCoordinates.timestamp}}, {api service}`;
   }
 }

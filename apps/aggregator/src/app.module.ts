@@ -5,6 +5,7 @@ import { AlertsModule, ApiConfigModule, ApiMetricsModule, DynamicModuleUtils, He
 import { SnapshotsService } from './snapshots.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BaseProvider } from '../../../providers/base.provider';
+import { ElasticIndexerModule } from './elastic/elastic.indexer.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { BaseProvider } from '../../../providers/base.provider';
     DynamicModuleUtils.getApiModule(),
     HealthCheckModule,
     ApiMetricsModule,
+    ElasticIndexerModule,
   ],
   providers: [
    SnapshotsService,

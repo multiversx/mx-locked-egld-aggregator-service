@@ -2,7 +2,11 @@ network: mainnet
 urls:
   api: 'https://api.multiversx.com'
   gateway: 'https://gateway.multiversx.com'
-  elastic: 'https://index.multiversx.com'
+elastic:
+  url: 'https://index.multiversx.com'
+  username: ''
+  password: ''
+  indexPrefix: 'accounts-000001'
 keepAliveTimeout:
   downstream: 61000
   upstream: 60000
