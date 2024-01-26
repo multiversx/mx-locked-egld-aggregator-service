@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NetworkType } from '../../entities';
 
 @Injectable()
-export class ApiConfigService implements ApiConfigService {
+export class ApiConfigService {
   constructor(private readonly config: ConfigService) { }
 
   getNetwork(): NetworkType {
@@ -88,6 +88,14 @@ export class ApiConfigService implements ApiConfigService {
 
   getTestConfigBatchApiRequestSize(): number {
     return this.getGenericConfig('testConfig.batchApiRequestSize', { defaultValue: 10 });
+  }
+
+  getDataApiToken(): string {
+    return this.getGenericConfig('tokens.dataApi');
+  }
+
+  getOrigin(): string {
+    return this.getGenericConfig('origin');
   }
 
   getGenericConfig<T>(key: string, options?: { defaultValue: T }): T {
