@@ -28,6 +28,8 @@ Create a new file within the `providers` directory. Inside this file, define a c
 
 To implement the `LiquidStakingProviderInterface`, you should create a class with methods that fulfill the interface's requirements.
 
+Beside the class implementation, make sure to update the `provider.loader.ts` file so the mapping between the provider name and class is done.
+
 5. **Testing Your Implementation**
 
 Before submitting a pull request, run the tests to ensure your implementation adheres to expected behaviors:
@@ -54,7 +56,7 @@ yarn test:testnet --provider=YOUR_PROVIDER_NAME # testnet
 yarn test:mainnet --provider=YOUR_PROVIDER_NAME # mainnet
 ```
 
-Ensure that you replace `YOUR_PROVIDER_NAME` with the name of your module. Keep in mind that is case sensitive.
+Ensure that you replace `YOUR_PROVIDER_NAME` with the name of your class. Keep in mind that it is case-sensitive.
 
 ## Troubleshooting
 
