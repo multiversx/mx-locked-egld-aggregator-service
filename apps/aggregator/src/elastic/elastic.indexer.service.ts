@@ -1,8 +1,10 @@
 import { ApiConfigService } from '@libs/common';
-import { ElasticService } from '@multiversx/sdk-nestjs-elastic';
 import { Injectable } from '@nestjs/common';
 import BigNumber from 'bignumber.js';
 import { OriginLogger } from '@multiversx/sdk-nestjs-common';
+import { ApiService, ApiSettings } from '@multiversx/sdk-nestjs-http';
+import fs from 'fs';
+import path from 'path';
 
 @Injectable()
 export class ElasticIndexerService {
@@ -10,42 +12,36 @@ export class ElasticIndexerService {
 
   constructor(
     private readonly apiConfigService: ApiConfigService,
-    private readonly elasticService: ElasticService,
+    private readonly apiService: ApiService,
   ) {}
 
   async addLiquidStakingForAddress(address: string, epoch: number, totalLiquidStaking: BigNumber): Promise<void> {
-    const currentTotalBalance = await this.getTotalBalanceWithStake(address, epoch);
-    if (currentTotalBalance.length == 0) {
-      this.logger.warn(`No entry for address ${address} found in Elasticsearch`);
-      return;
-    }
-
-    await this.setLiquidStakingValues(address, epoch, totalLiquidStaking, currentTotalBalance);
-  }
-
-  private async getTotalBalanceWithStake(address: string, epoch: number): Promise<string> {
-    const result = await this.elasticService.get(`${this.apiConfigService.getElasticUrl()}/${this.getIndexName(epoch)}/_search?q=_id:${address}`);
-    const hits = result.data?.hits?.hits;
-    if (hits && hits.length > 0) {
-      const totalBalanceWithStake = hits[0]._source.totalBalanceWithStake;
-      return totalBalanceWithStake == '' ? '0' : totalBalanceWithStake;
-    }
-
-    return '';
-  }
-
-  private async setLiquidStakingValues(address: string, epoch: number, totalLiquidStaking: BigNumber, currentTotalBalance: string) {
-    let totalBalance = new BigNumber(currentTotalBalance);
-    totalBalance = totalBalance.plus(totalLiquidStaking);
-
     const indexName = this.getIndexName(epoch);
-    await this.elasticService.setCustomValue(`${indexName}`, address, 'totalBalanceWithStake', totalBalance.toString(10));
-    await this.elasticService.setCustomValue(`${indexName}`, address, 'liquidStaking', totalLiquidStaking.toString(10));
+    if (!await this.doesIndexExist(indexName)) {
+      const successful = await this.createIndexWithMapping(indexName);
+      if (!successful) {
+        return;
+      }
+    }
 
-    await this.elasticService.setCustomValue(`${indexName}`, address, 'totalBalanceWithStakeNum', this.getNumericValueForBigInt(totalBalance));
-    await this.elasticService.setCustomValue(`${indexName}`, address, 'liquidStakingNum', this.getNumericValueForBigInt(totalLiquidStaking));
+    await this.setLiquidStakingValues(address, epoch, totalLiquidStaking);
+  }
 
-    this.logger.log(`Saved record for address ${address}. Liquid staking balance: ${totalLiquidStaking}. Final balance: ${totalBalance}`);
+  private async setLiquidStakingValues(address: string, epoch: number, totalLiquidStaking: BigNumber) {
+    const indexName = this.getIndexName(epoch);
+    //await this.apiService.post()
+
+    const totalLiquidStakingStr = totalLiquidStaking.toString(10);
+    const totalLiquidStakingNum = this.getNumericValueForBigInt(totalLiquidStaking);
+    const liquidStakingFields = {
+      liquidStaking: totalLiquidStakingStr,
+      liquidStakingNum: totalLiquidStakingNum,
+    };
+
+    const esScript = `{"doc":${JSON.stringify(liquidStakingFields)}, "upsert": ${JSON.stringify(liquidStakingFields)}}`;
+    await this.apiService.post(`${this.apiConfigService.getElasticUrl()}/${indexName}/_update/${address}`, esScript, this.getApiSettingForESQueries());
+
+    this.logger.log(`Saved record for address ${address}. Liquid staking balance: ${totalLiquidStaking}.`);
   }
 
   private getIndexName(epoch: number): string {
@@ -54,5 +50,41 @@ export class ElasticIndexerService {
 
   private getNumericValueForBigInt(bigNumber: BigNumber): number {
     return (parseFloat(bigNumber.dividedBy(1e18).toFixed(10)));
+  }
+
+  private async createIndexWithMapping(indexName: string): Promise<boolean> {
+    const mapping = this.getIndexMapping();
+    if (!mapping) {
+      this.logger.error('cannot load mapping from file');
+      return false;
+    }
+
+    await this.apiService.put(`${this.apiConfigService.getElasticUrl()}/${indexName}`, JSON.parse(mapping), this.getApiSettingForESQueries());
+    return true;
+  }
+
+  private async doesIndexExist(indexName: string): Promise<boolean> {
+    try {
+      const result = await this.apiService.head(`${this.apiConfigService.getElasticUrl()}/${indexName}`);
+      return result && result.status && result.status == 200;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  private getApiSettingForESQueries(): ApiSettings {
+    const apiSettings = new ApiSettings();
+    apiSettings.headers = { 'content-type': 'application/json' };
+
+    return apiSettings;
+  }
+
+  private getIndexMapping(): string | undefined {
+    const filePath = path.join(__dirname, './mappings/index.mapping.json');
+    if (fs.existsSync(filePath)) {
+      return fs.readFileSync(filePath, 'utf-8');
+    }
+
+    return undefined;
   }
 }

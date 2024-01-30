@@ -2,7 +2,7 @@
 
 ---
 
-### How to Aggregate Your Data
+## How to Aggregate Your Data
 
 If you wish to have your data aggregated and made available through this repository:
 
@@ -56,7 +56,7 @@ yarn test:testnet --provider=YOUR_PROVIDER_NAME # testnet
 yarn test:mainnet --provider=YOUR_PROVIDER_NAME # mainnet
 ```
 
-Ensure that you replace `YOUR_PROVIDER_NAME` with the name of your class. Keep in mind that it is case-sensitive.
+Ensure that you replace `YOUR_PROVIDER_NAME` with your provider name. Keep in mind that it is case-sensitive and it should have been initialized in `provider.loader.ts` file.
 
 ## Troubleshooting
 
