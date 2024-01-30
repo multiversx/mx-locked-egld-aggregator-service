@@ -10,7 +10,6 @@ import { ElasticIndexerService } from './elastic/elastic.indexer.service';
 @Injectable()
 export class SnapshotsService {
   private readonly logger = new OriginLogger(SnapshotsService.name);
-  private readonly BATCH_API_REQUEST_SIZE = 10;
   private readonly API_SLEEP_TIME = 1000;
 
   constructor(
@@ -73,7 +72,6 @@ export class SnapshotsService {
 
   async fetchDataForProject(providerName: string, network: string, users: Record<string, BigNumber>) {
     let projectStakedSum = new BigNumber(0);
-    let batchIterations = 0;
     let stakingAddresses: string[] = [];
     const liquidStakingProvider = await loadProvider(this.baseProvider, network, providerName);
     this.logger.log(`Processing staked value for ${providerName}`);
@@ -81,14 +79,11 @@ export class SnapshotsService {
     try {
       stakingAddresses = await liquidStakingProvider.getStakingAddresses();
       for (const address of stakingAddresses) {
-        if (batchIterations % this.BATCH_API_REQUEST_SIZE === 0) {
-          const stakedValue = await liquidStakingProvider.getAddressStake(address);
-          const userStaked = new BigNumber(stakedValue?.stake || 0);
-          this.addUserFunds(users, address, userStaked);
-          projectStakedSum = projectStakedSum.plus(userStaked);
-          await new Promise(resolve => setTimeout(resolve, this.API_SLEEP_TIME));
-        }
-        batchIterations++;
+        const stakedValue = await liquidStakingProvider.getAddressStake(address);
+        const userStaked = new BigNumber(stakedValue?.stake || 0);
+        this.addUserFunds(users, address, userStaked);
+        projectStakedSum = projectStakedSum.plus(userStaked);
+        await new Promise(resolve => setTimeout(resolve, this.API_SLEEP_TIME));
       }
     } catch (e) {
       throw new Error(`Error while processing staked value for ${providerName}: ${e}`);
