@@ -49,13 +49,26 @@ export class ApiConfigService {
     return this.getGenericConfig('slack.webhookUrl', { defaultValue: null });
   }
 
+  isElasticExportEnabled(): boolean {
+    const config = this.config.get<boolean>('output.elastic.enabled');
+    return config ? config : false;
+  }
 
   getElasticUrl(): string {
-    return this.getGenericConfig('elastic.url');
+    return this.getGenericConfig('output.elastic.url');
   }
 
   getElasticIndexPrefix(): string {
-    return this.getGenericConfig('elastic.indexPrefix');
+    return this.getGenericConfig('output.elastic.indexPrefix');
+  }
+
+  isJsonExportEnabled(): boolean {
+    const config = this.config.get<boolean>('output.jsonExport.enabled');
+    return config ? config : false;
+  }
+
+  getJsonExportPath(): string {
+    return this.getGenericConfig('output.jsonExport.filePath');
   }
 
   getInternalElasticUrl(): string {

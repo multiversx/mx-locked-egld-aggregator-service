@@ -1,22 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { AlertsService, ApiConfigService } from '@libs/common';
+import { AlertsService, ApiConfigService, LiquidStakingProviderInterface } from '@libs/common';
 import BigNumber from 'bignumber.js';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { BaseProvider } from '../../../providers/base.provider';
 import { loadProvider } from '../../../common/provider.loader';
 import { Lock, OriginLogger } from '@multiversx/sdk-nestjs-common';
 import { ElasticIndexerService } from './elastic/elastic.indexer.service';
+import request from 'supertest';
+import { JsonExporterService } from './jsonExporter/json.exporter.service';
 
 @Injectable()
 export class SnapshotsService {
   private readonly logger = new OriginLogger(SnapshotsService.name);
-  private readonly API_SLEEP_TIME = 1000;
+  private readonly API_SLEEP_TIME = 100;
 
   constructor(
     private readonly baseProvider: BaseProvider,
     private readonly apiConfigService: ApiConfigService,
     private readonly alertsService: AlertsService,
     private readonly elasticIndexer: ElasticIndexerService,
+    private readonly jsonExporter: JsonExporterService,
   ) { }
 
   @Cron(CronExpression.EVERY_DAY_AT_10AM)
@@ -31,23 +34,38 @@ export class SnapshotsService {
     const liquidStakingUsers: Record<string, BigNumber> = {};
 
     const network = this.apiConfigService.getNetwork();
-    for (const provider of snapshotsProviders) {
-      this.logger.log(`Started processing liquid staking for provider '${provider}'`);
+    for (const providerName of snapshotsProviders) {
+      const providerUsers: Record<string, BigNumber> = {};
+      const stakedValueSum: BigNumber = new BigNumber(0);
+      const providerInstance = await loadProvider(this.baseProvider, network, providerName);
+      if(!providerInstance) {
+        this.logger.error(`Cannot load scenario with name ${providerName}`);
+      }
+      this.logger.log(`Started processing liquid staking for provider '${providerName}'`);
       try {
-        const { stakedValueSum } = await this.fetchDataForProject(provider, network, liquidStakingUsers);
-        this.logger.log(`Total liquid staking for provider: ${provider}: ${stakedValueSum.dividedBy(1e18)} EGLD`);
+        const { stakedValueSum } = await this.fetchDataForProject(providerInstance, providerName, providerUsers);
+        this.logger.log(`Total liquid staking for provider: ${providerName}: ${stakedValueSum.dividedBy(1e18)} EGLD`);
       } catch (e) {
-        await this.alertsService.sendIndexerError(`Error while indexing data for ${provider}: ${e}`);
-        this.logger.error(`Error while indexing data for ${provider}: ${e}`);
+        await this.alertsService.sendIndexerError(`Error while indexing data for ${providerName}: ${e}`);
+        this.logger.error(`Error while indexing data for ${providerName}: ${e}`);
+        continue;
+      }
+
+
+      if (await this.isSumOfStakedLessOrEgualToContractStake(providerName, stakedValueSum, await providerInstance.getStakingContracts())) {
+        this.addProviderRecordsToSum(providerUsers, liquidStakingUsers);
+      } else {
+        this.logger.error(`Liquid Staking provider sum of users stake is larger than the staking contracts stake. Provider=${providerName}, Sum=${stakedValueSum.toString(10)}`);
       }
     }
 
+    this.jsonExporter.exportJson(liquidStakingUsers);
     await this.addRecordsToIndexer(liquidStakingUsers);
   }
 
   async addRecordsToIndexer(users: Record<string, BigNumber>) {
     const currentEpoch = await this.getCurrentEpoch();
-    this.logger.log(`fetched current epoch from netowrk: ${currentEpoch}`);
+    this.logger.log(`Fetched current epoch from network: ${currentEpoch}`);
     for (const address in users) {
       const addressBalance = users[address];
       await this.elasticIndexer.addLiquidStakingForAddress(address, currentEpoch, addressBalance);
@@ -70,10 +88,9 @@ export class SnapshotsService {
     throw new Error(`cannot get current network epoch`);
   }
 
-  async fetchDataForProject(providerName: string, network: string, users: Record<string, BigNumber>) {
+  async fetchDataForProject(liquidStakingProvider: LiquidStakingProviderInterface, providerName: string, users: Record<string, BigNumber>) {
     let projectStakedSum = new BigNumber(0);
     let stakingAddresses: string[] = [];
-    const liquidStakingProvider = await loadProvider(this.baseProvider, network, providerName);
     this.logger.log(`Processing staked value for ${providerName}`);
 
     try {
@@ -99,5 +116,43 @@ export class SnapshotsService {
     }
 
     users[address] = existingUserBalance.plus(balance);
+  }
+
+  private addProviderRecordsToSum(providerRecords: Record<string, BigNumber>, sumRecords: Record<string, BigNumber>) {
+    for (const address in providerRecords) {
+      if(sumRecords[address]) {
+        sumRecords[address].plus(providerRecords[address]);
+      } else {
+        sumRecords[address] = providerRecords[address];
+      }
+    }
+  }
+
+  private async isSumOfStakedLessOrEgualToContractStake(providerName: string, sum: BigNumber, contracts: string[]): Promise<boolean> {
+    const allContractsSum = new BigNumber(0);
+    for (const contract of contracts) {
+      const contractStake = await this.getStakeOfContract(contract);
+      if (contractStake) {
+        allContractsSum.plus(contractStake);
+      }
+    }
+
+    this.logger.log(`Provider ${providerName}: users stake: ${sum}, contracts stake: ${allContractsSum}`);
+    return sum.isLessThanOrEqualTo(allContractsSum);
+  }
+
+  private async getStakeOfContract(contract: string): Promise<BigNumber | undefined> {
+    let contractSum = new BigNumber(0);
+    try {
+      const { body: contractData } = await request(`${this.baseProvider.getApiConfigService().getApiUrl()}`).get(`/accounts/${contract}/delegation`);
+      contractSum = contractData.reduce((acc: BigNumber, curr: any) => {
+        return acc.plus(curr.userActiveStake);
+      }, contractSum);
+    } catch (e) {
+      this.logger.log(`Error when fetching total stake of the contract ${contract}: ${e}`);
+      return;
+    }
+
+    return contractSum;
   }
 }

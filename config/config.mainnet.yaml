@@ -2,11 +2,16 @@ network: mainnet
 urls:
   api: 'https://api.multiversx.com'
   gateway: 'https://gateway.multiversx.com'
-elastic:
-  url: 'https://index.multiversx.com'
-  username: ''
-  password: ''
-  indexPrefix: 'accounts-000001'
+output:
+  elastic:
+    enabled: true
+    url: 'http://localhost:9200'
+    username: ''
+    password: ''
+    indexPrefix: 'accounts-000001'
+  jsonExport:
+    enabled: true
+    filePath: 'liquidStakingSnapshot.json'
 keepAliveTimeout:
   downstream: 61000
   upstream: 60000

@@ -16,6 +16,10 @@ export class ElasticIndexerService {
   ) {}
 
   async addLiquidStakingForAddress(address: string, epoch: number, totalLiquidStaking: BigNumber): Promise<void> {
+    if (!this.apiConfigService.isElasticExportEnabled()) {
+      return;
+    }
+
     const indexName = this.getIndexName(epoch);
     if (!await this.doesIndexExist(indexName)) {
       const successful = await this.createIndexWithMapping(indexName);

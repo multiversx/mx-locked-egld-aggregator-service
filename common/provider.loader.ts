@@ -4,6 +4,8 @@ import { DummyProvider } from '../providers/dummy';
 import { DummyProvider as TestnetDummyProvider } from '../providers/testnet/dummy';
 import { DummyProvider as DevnetDummyProvider } from '../providers/devnet/dummy';
 import { ExampleProvider } from '../providers/example';
+import { HatomProvider } from '../providers/hatom';
+import { SalsaProvider } from '../providers/salsa';
 
 export async function loadProvider(baseProvider: BaseProvider, network: string, providerName: string): Promise<LiquidStakingProviderInterface> {
   let provider: LiquidStakingProviderInterface | undefined = undefined;
@@ -35,6 +37,10 @@ export function loadMainnetProvider(baseProvider: BaseProvider, providerName: st
       return new DummyProvider();
     case 'example':
       return new ExampleProvider(baseProvider);
+    case 'hatom':
+      return new HatomProvider(baseProvider);
+    case 'salsa':
+      return new SalsaProvider(baseProvider);
   }
 
   return;
