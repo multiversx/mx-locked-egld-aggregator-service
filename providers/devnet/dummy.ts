@@ -1,9 +1,8 @@
-import { LiquidStakingProviderInterface } from '@libs/common';
+import { LockedEgldProvider } from '@libs/common';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class DummyProvider implements LiquidStakingProviderInterface {
-  constructor() { }
+export class DummyProvider extends LockedEgldProvider {
 
   init(): Promise<void> {
     return Promise.resolve(undefined);

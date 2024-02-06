@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { AlertsService, ApiConfigService, LiquidStakingProviderInterface } from '@libs/common';
+import { AlertsService, ApiConfigService, LockedEgldProvider } from '@libs/common';
 import BigNumber from 'bignumber.js';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { BaseProvider } from '../../../providers/base.provider';
 import { loadProvider } from '../../../common/provider.loader';
 import { Lock, OriginLogger } from '@multiversx/sdk-nestjs-common';
 import { ElasticIndexerService } from './elastic/elastic.indexer.service';
-import request from 'supertest';
 import { JsonExporterService } from './jsonExporter/json.exporter.service';
+import { ApiService } from '@multiversx/sdk-nestjs-http';
 
 @Injectable()
 export class SnapshotsService {
@@ -16,6 +16,7 @@ export class SnapshotsService {
 
   constructor(
     private readonly baseProvider: BaseProvider,
+    private readonly apiService: ApiService,
     private readonly apiConfigService: ApiConfigService,
     private readonly alertsService: AlertsService,
     private readonly elasticIndexer: ElasticIndexerService,
@@ -38,7 +39,7 @@ export class SnapshotsService {
       const providerUsers: Record<string, BigNumber> = {};
       const stakedValueSum: BigNumber = new BigNumber(0);
       const providerInstance = await loadProvider(this.baseProvider, network, providerName);
-      if(!providerInstance) {
+      if (!providerInstance) {
         this.logger.error(`Cannot load scenario with name ${providerName}`);
       }
       this.logger.log(`Started processing liquid staking for provider '${providerName}'`);
@@ -75,7 +76,7 @@ export class SnapshotsService {
   async getCurrentEpoch(): Promise<number> {
     let currentTry = 0;
     while (currentTry < 10) {
-      const epochResponse = await this.baseProvider.getApiService().get(`${this.baseProvider.getApiConfigService().getApiUrl()}/stats`);
+      const epochResponse = await this.apiService.get(`${this.apiConfigService.getApiUrl()}/stats`);
       if (epochResponse?.data?.epoch) {
         return epochResponse.data.epoch;
       }
@@ -88,7 +89,7 @@ export class SnapshotsService {
     throw new Error(`cannot get current network epoch`);
   }
 
-  async fetchDataForProject(liquidStakingProvider: LiquidStakingProviderInterface, providerName: string, users: Record<string, BigNumber>) {
+  async fetchDataForProject(liquidStakingProvider: LockedEgldProvider, providerName: string, users: Record<string, BigNumber>) {
     let projectStakedSum = new BigNumber(0);
     let stakingAddresses: string[] = [];
     this.logger.log(`Processing staked value for ${providerName}`);
@@ -120,7 +121,7 @@ export class SnapshotsService {
 
   private addProviderRecordsToSum(providerRecords: Record<string, BigNumber>, sumRecords: Record<string, BigNumber>) {
     for (const address in providerRecords) {
-      if(sumRecords[address]) {
+      if (sumRecords[address]) {
         sumRecords[address].plus(providerRecords[address]);
       } else {
         sumRecords[address] = providerRecords[address];
@@ -144,7 +145,7 @@ export class SnapshotsService {
   private async getStakeOfContract(contract: string): Promise<BigNumber | undefined> {
     let contractSum = new BigNumber(0);
     try {
-      const { body: contractData } = await request(`${this.baseProvider.getApiConfigService().getApiUrl()}`).get(`/accounts/${contract}/delegation`);
+      const { data: contractData } = await this.apiService.get(`${this.apiConfigService.getApiUrl()}/accounts/${contract}/delegation`);
       contractSum = contractData.reduce((acc: BigNumber, curr: any) => {
         return acc.plus(curr.userActiveStake);
       }, contractSum);

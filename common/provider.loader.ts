@@ -1,4 +1,3 @@
-import { LiquidStakingProviderInterface } from '@libs/common';
 import { BaseProvider } from '../providers/base.provider';
 import { DummyProvider } from '../providers/dummy';
 import { DummyProvider as TestnetDummyProvider } from '../providers/testnet/dummy';
@@ -6,9 +5,10 @@ import { DummyProvider as DevnetDummyProvider } from '../providers/devnet/dummy'
 import { ExampleProvider } from '../providers/example';
 import { HatomProvider } from '../providers/hatom';
 import { SalsaProvider } from '../providers/salsa';
+import { LockedEgldProvider } from '@libs/common';
 
-export async function loadProvider(baseProvider: BaseProvider, network: string, providerName: string): Promise<LiquidStakingProviderInterface> {
-  let provider: LiquidStakingProviderInterface | undefined = undefined;
+export async function loadProvider(baseProvider: BaseProvider, network: string, providerName: string): Promise<LockedEgldProvider> {
+  let provider: LockedEgldProvider | undefined = undefined;
   switch (network) {
     case 'mainnet':
       provider = loadMainnetProvider(baseProvider, providerName);
@@ -31,10 +31,10 @@ export async function loadProvider(baseProvider: BaseProvider, network: string, 
 
 }
 
-export function loadMainnetProvider(baseProvider: BaseProvider, providerName: string): LiquidStakingProviderInterface | undefined {
+export function loadMainnetProvider(baseProvider: BaseProvider, providerName: string): LockedEgldProvider | undefined {
   switch (providerName) {
     case 'dummy':
-      return new DummyProvider();
+      return new DummyProvider(baseProvider);
     case 'example':
       return new ExampleProvider(baseProvider);
     case 'hatom':
@@ -46,19 +46,19 @@ export function loadMainnetProvider(baseProvider: BaseProvider, providerName: st
   return;
 }
 
-export function loadTestnetProvider(_baseProvider: BaseProvider, providerName: string): LiquidStakingProviderInterface | undefined {
+export function loadTestnetProvider(baseProvider: BaseProvider, providerName: string): LockedEgldProvider | undefined {
   switch (providerName) {
     case 'dummy':
-      return new TestnetDummyProvider();
+      return new TestnetDummyProvider(baseProvider);
   }
 
   return;
 }
 
-export function loadDevnetProvider(_baseProvider: BaseProvider, providerName: string): LiquidStakingProviderInterface | undefined {
+export function loadDevnetProvider(baseProvider: BaseProvider, providerName: string): LockedEgldProvider | undefined {
   switch (providerName) {
     case 'dummy':
-      return new DevnetDummyProvider();
+      return new DevnetDummyProvider(baseProvider);
   }
 
   return;
