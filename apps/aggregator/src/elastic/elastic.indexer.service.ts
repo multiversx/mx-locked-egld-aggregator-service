@@ -1,5 +1,5 @@
 import { ApiConfigService } from '@libs/common';
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import BigNumber from 'bignumber.js';
 import { OriginLogger } from '@multiversx/sdk-nestjs-common';
 import { ApiService, ApiSettings } from '@multiversx/sdk-nestjs-http';
@@ -13,9 +13,9 @@ export class ElasticIndexerService {
   constructor(
     private readonly apiConfigService: ApiConfigService,
     private readonly apiService: ApiService,
-  ) {}
+  ) { }
 
-  async addLiquidStakingForAddress(address: string, epoch: number, totalLiquidStaking: BigNumber): Promise<void> {
+  async addLockedEgldForAddress(address: string, epoch: number, totalLockedEgld: BigNumber): Promise<void> {
     if (!this.apiConfigService.isElasticExportEnabled()) {
       return;
     }
@@ -28,24 +28,42 @@ export class ElasticIndexerService {
       }
     }
 
-    await this.setLiquidStakingValues(address, epoch, totalLiquidStaking);
+    await this.setLockedEgldValues(address, epoch, totalLockedEgld);
   }
 
-  private async setLiquidStakingValues(address: string, epoch: number, totalLiquidStaking: BigNumber) {
+  async isIndexWritable(): Promise<boolean> {
+    try {
+      const healthCheckStructure = {
+        testKey: 'testValue',
+      };
+      const esScript = `{"doc":${JSON.stringify(healthCheckStructure)}, "upsert": ${JSON.stringify(healthCheckStructure)}}`;
+      const resp = await this.apiService.post(`${this.apiConfigService.getElasticUrl()}/healthcheckindex/_update/test`, esScript, this.getApiSettingsForESQueries());
+      if (resp && resp.status && resp.status == HttpStatus.FORBIDDEN) {
+        return false;
+      }
+    } catch (error) {
+      this.logger.warn(`Elasticsearch is not writable: ${error}`);
+      return false;
+    }
+
+    return true;
+  }
+
+  private async setLockedEgldValues(address: string, epoch: number, totalLockedEgld: BigNumber) {
     const indexName = this.getIndexName(epoch);
     //await this.apiService.post()
 
-    const totalLiquidStakingStr = totalLiquidStaking.toString(10);
-    const totalLiquidStakingNum = this.getNumericValueForBigInt(totalLiquidStaking);
-    const liquidStakingFields = {
-      liquidStaking: totalLiquidStakingStr,
-      liquidStakingNum: totalLiquidStakingNum,
+    const totalLockedEgldStr = totalLockedEgld.toFixed();
+    const totalLockedEgldNum = this.getNumericValueForBigInt(totalLockedEgld);
+    const lockedEgldFields = {
+      lockedEgld: totalLockedEgldStr,
+      lockedEgldNum: totalLockedEgldNum,
     };
 
-    const esScript = `{"doc":${JSON.stringify(liquidStakingFields)}, "upsert": ${JSON.stringify(liquidStakingFields)}}`;
-    await this.apiService.post(`${this.apiConfigService.getElasticUrl()}/${indexName}/_update/${address}`, esScript, this.getApiSettingForESQueries());
+    const esScript = `{"doc":${JSON.stringify(lockedEgldFields)}, "upsert": ${JSON.stringify(lockedEgldFields)}}`;
+    await this.apiService.post(`${this.apiConfigService.getElasticUrl()}/${indexName}/_update/${address}`, esScript, this.getApiSettingsForESQueries());
 
-    this.logger.log(`Saved record for address ${address}. Liquid staking balance: ${totalLiquidStaking}.`);
+    this.logger.log(`Saved record for address ${address}. Liquid staking balance: ${totalLockedEgld}.`);
   }
 
   private getIndexName(epoch: number): string {
@@ -63,7 +81,7 @@ export class ElasticIndexerService {
       return false;
     }
 
-    await this.apiService.put(`${this.apiConfigService.getElasticUrl()}/${indexName}`, JSON.parse(mapping), this.getApiSettingForESQueries());
+    await this.apiService.put(`${this.apiConfigService.getElasticUrl()}/${indexName}`, JSON.parse(mapping), this.getApiSettingsForESQueries());
     return true;
   }
 
@@ -76,7 +94,7 @@ export class ElasticIndexerService {
     }
   }
 
-  private getApiSettingForESQueries(): ApiSettings {
+  private getApiSettingsForESQueries(): ApiSettings {
     const apiSettings = new ApiSettings();
     apiSettings.headers = { 'content-type': 'application/json' };
 

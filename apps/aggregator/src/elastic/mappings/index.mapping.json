@@ -25,10 +25,10 @@
       "validatorsTopUpNum": {
         "type": "double"
       },
-      "liquidStaking": {
+      "lockedEgld": {
         "type": "keyword"
       },
-      "liquidStakingNum": {
+      "lockedEgldNum": {
         "type": "double"
       }
     }

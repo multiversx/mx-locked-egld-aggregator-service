@@ -24,20 +24,22 @@ export class SnapshotsService {
   ) { }
 
   @Cron(CronExpression.EVERY_DAY_AT_10AM)
-  @Lock({ name: 'Liquid Staking snapshots cronjob', verbose: true })
+  @Lock({ name: 'Locked EGLD snapshots cronjob', verbose: true })
   async indexData() {
+    if (!await this.arePreliminaryChecksOk()) {
+      return;
+    }
     const snapshotsProviders = this.apiConfigService.getSnapshotsProviders();
     if (snapshotsProviders.length == 0) {
       this.logger.warn('No provider defined in the configuration file');
       return;
     }
 
-    const liquidStakingUsers: Record<string, BigNumber> = {};
+    const lockedEgldUsers: Record<string, BigNumber> = {};
 
     const network = this.apiConfigService.getNetwork();
     for (const providerName of snapshotsProviders) {
       const providerUsers: Record<string, BigNumber> = {};
-      const stakedValueSum: BigNumber = new BigNumber(0);
       const providerInstance = await loadProvider(this.baseProvider, network, providerName);
       if (!providerInstance) {
         this.logger.error(`Cannot load scenario with name ${providerName}`);
@@ -46,22 +48,48 @@ export class SnapshotsService {
       try {
         const { stakedValueSum } = await this.fetchDataForProject(providerInstance, providerName, providerUsers);
         this.logger.log(`Total liquid staking for provider: ${providerName}: ${stakedValueSum.dividedBy(1e18)} EGLD`);
+
+        if (await this.isSumOfStakedLessOrEgualToContractStake(providerName, stakedValueSum, await providerInstance.getLockedEgldContracts())) {
+          this.addProviderRecordsToSum(providerUsers, lockedEgldUsers);
+        } else {
+          this.logger.error(`Liquid Staking provider sum of users stake is larger than the staking contracts stake. Provider=${providerName}, Sum=${stakedValueSum.toString(10)}`);
+        }
+
       } catch (e) {
-        await this.alertsService.sendIndexerError(`Error while indexing data for ${providerName}: ${e}`);
-        this.logger.error(`Error while indexing data for ${providerName}: ${e}`);
-        continue;
-      }
-
-
-      if (await this.isSumOfStakedLessOrEgualToContractStake(providerName, stakedValueSum, await providerInstance.getStakingContracts())) {
-        this.addProviderRecordsToSum(providerUsers, liquidStakingUsers);
-      } else {
-        this.logger.error(`Liquid Staking provider sum of users stake is larger than the staking contracts stake. Provider=${providerName}, Sum=${stakedValueSum.toString(10)}`);
+        await this.logAndSendAlert(`Error while indexing data for ${providerName}: ${e}`);
       }
     }
 
-    this.jsonExporter.exportJson(liquidStakingUsers);
-    await this.addRecordsToIndexer(liquidStakingUsers);
+    await this.exportData(lockedEgldUsers);
+  }
+
+  private async arePreliminaryChecksOk(): Promise<boolean> {
+    const isElasticEnabled = this.apiConfigService.isElasticExportEnabled();
+    const isJsonExportEnabled = this.apiConfigService.isJsonExportEnabled();
+    if (!isElasticEnabled && !isJsonExportEnabled) {
+      await this.logAndSendAlert('All export methods are disabled. Will early exit the cron job');
+      return false;
+    }
+
+    if (isElasticEnabled) {
+      return this.elasticIndexer.isIndexWritable();
+    }
+
+    return true;
+  }
+
+  private async logAndSendAlert(message: string) {
+    await this.alertsService.sendIndexerError(message);
+    this.logger.error(message);
+  }
+
+  async exportData(users: Record<string, BigNumber>) {
+    try {
+      this.jsonExporter.exportJson(users);
+      await this.addRecordsToIndexer(users);
+    } catch (e) {
+      await this.alertsService.sendIndexerError(`Error while exporting data: ${e}`);
+    }
   }
 
   async addRecordsToIndexer(users: Record<string, BigNumber>) {
@@ -69,7 +97,7 @@ export class SnapshotsService {
     this.logger.log(`Fetched current epoch from network: ${currentEpoch}`);
     for (const address in users) {
       const addressBalance = users[address];
-      await this.elasticIndexer.addLiquidStakingForAddress(address, currentEpoch, addressBalance);
+      await this.elasticIndexer.addLockedEgldForAddress(address, currentEpoch, addressBalance);
     }
   }
 
@@ -89,16 +117,16 @@ export class SnapshotsService {
     throw new Error(`cannot get current network epoch`);
   }
 
-  async fetchDataForProject(liquidStakingProvider: LockedEgldProvider, providerName: string, users: Record<string, BigNumber>) {
+  async fetchDataForProject(lockedEgldProvider: LockedEgldProvider, providerName: string, users: Record<string, BigNumber>) {
     let projectStakedSum = new BigNumber(0);
     let stakingAddresses: string[] = [];
     this.logger.log(`Processing staked value for ${providerName}`);
 
     try {
-      stakingAddresses = await liquidStakingProvider.getStakingAddresses();
+      stakingAddresses = await lockedEgldProvider.getLockedEgldAddresses();
       for (const address of stakingAddresses) {
-        const stakedValue = await liquidStakingProvider.getAddressStake(address);
-        const userStaked = new BigNumber(stakedValue?.stake || 0);
+        const lockEgldValue = await lockedEgldProvider.getAddressLockedEgld(address);
+        const userStaked = new BigNumber(lockEgldValue?.lockedEgld || 0);
         this.addUserFunds(users, address, userStaked);
         projectStakedSum = projectStakedSum.plus(userStaked);
         await new Promise(resolve => setTimeout(resolve, this.API_SLEEP_TIME));

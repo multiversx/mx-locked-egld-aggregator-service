@@ -13,25 +13,23 @@ export class HatomProvider extends LockedEgldProvider {
     return Promise.resolve();
   }
 
-  getStakingContracts(): Promise<string[]> {
+  getLockedEgldContracts(): Promise<string[]> {
     // Return hardcoded contracts. A provider also can return the contracts from an API.
     return Promise.resolve(this.contracts);
   }
 
-  async getAddressStake(address: string): Promise<{ stake: string }> {
+  async getAddressLockedEgld(address: string): Promise<{ lockedEgld: string }> {
     const tokenBalance = await this.baseProvider.getTokenBalance(address, this.tokenIdentifier);
     const tokenPrice = 1; // TODO get SEGLD-3ad2d0 price in EGLD
 
     const addressStake = new BigNumber(tokenBalance).multipliedBy(tokenPrice).toFixed();
 
     return {
-      stake: addressStake,
+      lockedEgld: addressStake,
     };
   }
 
-  async getStakingAddresses(): Promise<string[]> {
-    const stakingAddresses = await this.baseProvider.getTokenHolders(this.tokenIdentifier);
-
-    return stakingAddresses;
+  async getLockedEgldAddresses(): Promise<string[]> {
+    return await this.baseProvider.getTokenHolders(this.tokenIdentifier);
   }
 }

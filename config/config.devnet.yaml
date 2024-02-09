@@ -11,7 +11,7 @@ output:
     indexPrefix: 'accounts-000001'
   jsonExport:
     enabled: true
-    filePath: 'liquidStakingSnapshot.json'
+    filePath: 'lockedEgldSnapshot.json'
 keepAliveTimeout:
   downstream: 61000
   upstream: 60000

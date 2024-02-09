@@ -14,23 +14,23 @@ export class SalsaProvider extends LockedEgldProvider {
   }
 
   // eslint-disable-next-line require-await
-  async getStakingContracts(): Promise<string[]> {
+  async getLockedEgldContracts(): Promise<string[]> {
     // Return hardcoded contracts. A provider also can return the contracts from an API.
     return this.contracts;
   }
 
-  async getAddressStake(address: string): Promise<{ stake: string }> {
+  async getAddressLockedEgld(address: string): Promise<{ lockedEgld: string }> {
     const tokenBalance = await this.baseProvider.getTokenBalance(address, this.tokenIdentifier);
     const tokenPrice = 1; // TODO get LEGLD-d74da9 price in EGLD
 
     const addressStake = new BigNumber(tokenBalance).multipliedBy(tokenPrice).toFixed();
 
     return {
-      stake: addressStake,
+      lockedEgld: addressStake,
     };
   }
 
-  async getStakingAddresses(): Promise<string[]> {
+  async getLockedEgldAddresses(): Promise<string[]> {
     const holders = await this.baseProvider.getTokenHolders(this.tokenIdentifier);
 
     return holders;

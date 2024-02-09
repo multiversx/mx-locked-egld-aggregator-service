@@ -6,6 +6,8 @@ import { ExampleProvider } from '../providers/example';
 import { HatomProvider } from '../providers/hatom';
 import { SalsaProvider } from '../providers/salsa';
 import { LockedEgldProvider } from '@libs/common';
+import { Example2Provider } from '../providers/example2';
+import { Example3Provider } from '../providers/example3';
 
 export async function loadProvider(baseProvider: BaseProvider, network: string, providerName: string): Promise<LockedEgldProvider> {
   let provider: LockedEgldProvider | undefined = undefined;
@@ -41,6 +43,10 @@ export function loadMainnetProvider(baseProvider: BaseProvider, providerName: st
       return new HatomProvider(baseProvider);
     case 'salsa':
       return new SalsaProvider(baseProvider);
+    case 'example2':
+      return new Example2Provider(baseProvider);
+    case 'example3':
+      return new Example3Provider(baseProvider);
   }
 
   return;
