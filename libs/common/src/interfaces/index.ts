@@ -1,1 +1,1 @@
-export * from './liquid-staking-provider.interface';
+export * from './locked.egld.provider';

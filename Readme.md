@@ -1,8 +1,14 @@
-# MultiversX Liquid Staking Aggregator
+# MultiversX Locked EGLD Aggregator
 
 ---
 
-### How to Aggregate Your Data
+## Introduction
+
+This repository aims to provide a way for different providers in the MultiversX ecosystem to implement their own ways of fetching the amount of EGLD locked for each of the addresses that interact with them.
+
+This will be useful for multiple use-cases, such as snapshots, liquid staking data aggregator, frontend display, and so on.
+
+## How to Aggregate Your Data
 
 If you wish to have your data aggregated and made available through this repository:
 
@@ -22,11 +28,15 @@ _We recommend you to use [yarn](https://yarnpkg.com/) as a package manager._
 
 3. **Create a new file for your provider**
 
-Create a new file within the `providers` directory. Inside this file, define a class that implements the `LiquidStakingProviderInterface` interface.
+Create a new file within the `providers` directory. Inside this file, define a class that implements the `LockedEgldProviderInterface` interface.
 
-4. **Implement the `LiquidStakingProviderInterface`**
+4. **Implement the `LockedEgldProviderInterface`**
 
-To implement the `LiquidStakingProviderInterface`, you should create a class with methods that fulfill the interface's requirements.
+To implement the `LockedEgldProviderInterface`, you should create a class with methods that fulfill the interface's requirements.
+
+You should also extend the `BaseProvider` class that will contain useful methods and access to the MultiversX API.
+
+Beside the class implementation, make sure to update the `provider.loader.ts` file so the mapping between the provider name and class is done.
 
 5. **Testing Your Implementation**
 
@@ -54,11 +64,11 @@ yarn test:testnet --provider=YOUR_PROVIDER_NAME # testnet
 yarn test:mainnet --provider=YOUR_PROVIDER_NAME # mainnet
 ```
 
-Ensure that you replace `YOUR_PROVIDER_NAME` with the name of your module. Keep in mind that is case sensitive.
+Ensure that you replace `YOUR_PROVIDER_NAME` with your provider name. Keep in mind that it is case-sensitive and it should have been initialized in `provider.loader.ts` file.
 
 ## Troubleshooting
 
-- To validate data accuracy, we verify that the combined staked amount from contracts is close to the collective total of all staking addresses. It the test fails, you can increase the `acceptablePercentageDifference` threshold
+- To validate data accuracy, we verify that the combined locked EGLD amount from contracts is close to the collective total of all locked EGLD addresses. It the test fails, you can increase the `acceptablePercentageDifference` threshold
 
 - To avoid hitting the rate limiter imposed by the public API, you have the option to fine-tune your settings to stay within the 2 requests per second (RPS) limit. To achieve this, consider modifying the `apiSleepTime` and `batchApiRequestSize` settings.
 

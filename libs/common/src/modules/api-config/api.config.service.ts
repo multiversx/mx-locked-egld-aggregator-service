@@ -13,12 +13,12 @@ export class ApiConfigService {
   }
 
   getApiPort(): number {
-    return this.getGenericConfig('apps.api.port');
+    return this.getGenericConfig('api.port');
   }
 
 
   getApiPrefix(): string {
-    return this.getGenericConfig('apps.api.prefix');
+    return this.getGenericConfig('api.prefix');
   }
 
   getRedisUrl(): string {
@@ -49,9 +49,26 @@ export class ApiConfigService {
     return this.getGenericConfig('slack.webhookUrl', { defaultValue: null });
   }
 
+  isElasticExportEnabled(): boolean {
+    const config = this.config.get<boolean>('output.elastic.enabled');
+    return config ? config : false;
+  }
 
   getElasticUrl(): string {
-    return this.getGenericConfig('urls.elastic');
+    return this.getGenericConfig('output.elastic.url');
+  }
+
+  getElasticIndexPrefix(): string {
+    return this.getGenericConfig('output.elastic.indexPrefix');
+  }
+
+  isJsonExportEnabled(): boolean {
+    const config = this.config.get<boolean>('output.jsonExport.enabled');
+    return config ? config : false;
+  }
+
+  getJsonExportPath(): string {
+    return this.getGenericConfig('output.jsonExport.filePath');
   }
 
   getInternalElasticUrl(): string {
@@ -60,6 +77,10 @@ export class ApiConfigService {
 
   getApiUrl(): string {
     return this.getGenericConfig('urls.api');
+  }
+
+  getSnapshotsProviders(): string[] {
+    return this.getGenericConfig('snapshotsProviders');
   }
 
   getDataApiUrl(): string {

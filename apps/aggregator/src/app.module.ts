@@ -1,26 +1,27 @@
-
 import { Module } from '@nestjs/common';
 import { LoggingModule } from '@multiversx/sdk-nestjs-common';
 import { AlertsModule, ApiConfigModule, ApiMetricsModule, DynamicModuleUtils, HealthCheckModule } from '@libs/common';
-import { ModuleFactory } from "./module-factory";
-import { DataApiIndexerService } from './data-api.indexer.service';
+import { SnapshotsService } from './snapshots.service';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ProjectsModule } from './projects.module';
+import { BaseProvider } from '../../../providers/base.provider';
+import { ElasticIndexerModule } from './elastic/elastic.indexer.module';
+import { JsonExporterModule } from './jsonExporter/json.exporter.module';
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
     LoggingModule,
+    ScheduleModule.forRoot(),
     AlertsModule,
     ApiConfigModule,
     DynamicModuleUtils.getApiModule(),
     HealthCheckModule,
     ApiMetricsModule,
-    ProjectsModule,
-    ModuleFactory,
+    ElasticIndexerModule,
+    JsonExporterModule,
   ],
   providers: [
-    DataApiIndexerService,
+    SnapshotsService,
+    BaseProvider,
   ],
 })
-export class AppModule { }
+export class AppModule {}

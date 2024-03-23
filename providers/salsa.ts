@@ -3,7 +3,7 @@ import { LockedEgldProvider } from '@libs/common';
 import { BigNumber } from 'bignumber.js';
 
 @Injectable()
-export class ExampleProvider extends LockedEgldProvider {
+export class SalsaProvider extends LockedEgldProvider {
   private readonly tokenIdentifier = 'LEGLD-d74da9';
   private readonly contracts = [
     'erd1qqqqqqqqqqqqqpgqaqxztq0y764dnet95jwtse5u5zkg92sfacts6h9su3',
