@@ -51,7 +51,6 @@ export class ElasticIndexerService {
 
   private async setLockedEgldValues(address: string, epoch: number, totalLockedEgld: BigNumber) {
     const indexName = this.getIndexName(epoch);
-    //await this.apiService.post()
 
     const totalLockedEgldStr = totalLockedEgld.toFixed();
     const totalLockedEgldNum = this.getNumericValueForBigInt(totalLockedEgld);
