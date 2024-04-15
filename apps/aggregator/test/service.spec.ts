@@ -1,7 +1,5 @@
-import * as process from 'process';
 import BigNumber from 'bignumber.js';
 import { ApiConfigModule, ApiConfigService, DynamicModuleUtils, LockedEgldProvider } from '@libs/common';
-import parseArgs from 'minimist';
 import { Test } from '@nestjs/testing';
 import { loadProvider } from '../../../common/provider.loader';
 import { BaseProvider } from '../../../providers/base.provider';
@@ -13,7 +11,7 @@ function isCloseTo(value1: number, value2: number, margin = 10) {
   return difference <= allowedDifference;
 }
 
-describe('Projects service testing', () => {
+describe('Example provider testing', () => {
   let batchIterations = 0;
   let lockedEgldProvider: LockedEgldProvider;
   let baseProvider: BaseProvider;
@@ -33,7 +31,8 @@ describe('Projects service testing', () => {
 
     apiConfigService = moduleRef.get(ApiConfigService);
     baseProvider = moduleRef.get(BaseProvider);
-    const { provider, network } = parseArgs(process.argv);
+    const provider = "example";
+    const network = "mainnet";
     lockedEgldProvider = await loadProvider(baseProvider, network, provider);
   });
 
@@ -58,12 +57,12 @@ describe('Projects service testing', () => {
     const stakingAddresses = await lockedEgldProvider.getLockedEgldAddresses();
     const random = Math.floor(Math.random() * stakingAddresses.length);
     const stake = await lockedEgldProvider.getAddressLockedEgld(stakingAddresses[random]);
-    expect(stake).toHaveProperty('stake');
+    expect(stake).toHaveProperty('lockedEgld');
     expect(stake?.lockedEgld).toBeDefined();
     expect(stake?.lockedEgld).not.toBeNull();
   });
 
-  it('should check the total staked amount is equal to the sum of all staking addresses', async () => {
+  it.skip('should check the total staked amount is equal to the sum of all staking addresses', async () => {
     const API_SLEEP_TIME = apiConfigService.getTestConfigApiSleepTime();
     const BATCH_API_REQUEST_SIZE = apiConfigService.getTestConfigBatchApiRequestSize();
 

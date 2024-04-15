@@ -89,6 +89,8 @@ describe('SnapshotsService', () => {
       const resultThatShouldBeTrue = await provider.isSumOfStakedLessOrEgualToContractStake("my-provider", new BigNumber(900), ["first-contract", "second-contract"]);
       expect(resultThatShouldBeTrue).toBeTruthy();
 
+      jest.spyOn(apiService, 'get').mockResolvedValueOnce({ data: fakeContractData1 });
+      jest.spyOn(apiService, 'get').mockResolvedValueOnce({ data: fakeContractData2 });
       const resultThatShouldBeFalse = await provider.isSumOfStakedLessOrEgualToContractStake("my-provider", new BigNumber(1100), ["first-contract", "second-contract"]);
       expect(resultThatShouldBeFalse).toBeFalsy();
     });

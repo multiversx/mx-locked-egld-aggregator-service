@@ -24,7 +24,8 @@ export class SnapshotsService {
     private readonly jsonExporter: JsonExporterService,
   ) { }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // note that the snapshot time is not fixed and can be triggered at random times by the MultiversX team
+  @Cron(CronExpression.EVERY_DAY_AT_11AM)
   @Lock({ name: 'Locked EGLD snapshots cronjob', verbose: true })
   async indexData() {
     if (!await this.arePreliminaryChecksOk()) {
@@ -52,8 +53,6 @@ export class SnapshotsService {
 
         if (await this.isSumOfStakedLessOrEgualToContractStake(providerName, stakedValueSum, await providerInstance.getLockedEgldContracts())) {
           this.addProviderRecords(providerName, providerUsers, lockedEgldUsers);
-        } else {
-          this.logger.error(`Liquid Staking provider sum of users stake is larger than the staking contracts stake. Provider=${providerName}, Sum=${stakedValueSum.toString(10)}`);
         }
       } catch (e) {
         await this.logAndSendAlert(`Error while indexing data for ${providerName}: ${e}`);
@@ -170,7 +169,12 @@ export class SnapshotsService {
     }
 
     this.logger.log(`Provider ${providerName}: users stake: ${sum}, contracts stake: ${allContractsSum}`);
-    return sum.isLessThanOrEqualTo(allContractsSum);
+    if (sum.isLessThanOrEqualTo(allContractsSum)) {
+      return true;
+    }
+
+    this.logger.error(`Liquid Staking provider sum of users stake is larger than the staking contracts stake. Provider=${providerName}, Contracts stake=${allContractsSum.toString(10)}, Users locked EGLD=${sum.toString(10)}`);
+    return false;
   }
 
   async getStakeOfContract(contract: string): Promise<BigNumber | undefined> {
