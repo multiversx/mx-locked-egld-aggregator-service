@@ -1,8 +1,8 @@
 import { ApiConfigService } from '@libs/common';
 import { Injectable } from '@nestjs/common';
-import BigNumber from 'bignumber.js';
 import { OriginLogger } from '@multiversx/sdk-nestjs-common';
 import fs from 'fs';
+import { ProviderLockedEgldInfo } from '../../../../common/entities/provider.locked.egld.info';
 
 @Injectable()
 export class JsonExporterService {
@@ -12,7 +12,7 @@ export class JsonExporterService {
     private readonly apiConfigService: ApiConfigService,
   ) {}
 
-  exportJson(users: Record<string, BigNumber>) {
+  exportJson(users: Record<string, ProviderLockedEgldInfo[]>) {
     if (!this.apiConfigService.isJsonExportEnabled()) {
       return;
     }

@@ -1,7 +1,5 @@
-import * as process from 'process';
 import BigNumber from 'bignumber.js';
 import { ApiConfigModule, ApiConfigService, DynamicModuleUtils, LockedEgldProvider } from '@libs/common';
-import parseArgs from 'minimist';
 import { Test } from '@nestjs/testing';
 import { loadProvider } from '../../../common/provider.loader';
 import { BaseProvider } from '../../../providers/base.provider';
@@ -13,7 +11,7 @@ function isCloseTo(value1: number, value2: number, margin = 10) {
   return difference <= allowedDifference;
 }
 
-describe('Projects service testing', () => {
+describe.skip('Example provider testing', () => {
   let batchIterations = 0;
   let lockedEgldProvider: LockedEgldProvider;
   let baseProvider: BaseProvider;
@@ -33,7 +31,8 @@ describe('Projects service testing', () => {
 
     apiConfigService = moduleRef.get(ApiConfigService);
     baseProvider = moduleRef.get(BaseProvider);
-    const { provider, network } = parseArgs(process.argv);
+    const provider = "example";
+    const network = "mainnet";
     lockedEgldProvider = await loadProvider(baseProvider, network, provider);
   });
 
@@ -58,7 +57,7 @@ describe('Projects service testing', () => {
     const stakingAddresses = await lockedEgldProvider.getLockedEgldAddresses();
     const random = Math.floor(Math.random() * stakingAddresses.length);
     const stake = await lockedEgldProvider.getAddressLockedEgld(stakingAddresses[random]);
-    expect(stake).toHaveProperty('stake');
+    expect(stake).toHaveProperty('lockedEgld');
     expect(stake?.lockedEgld).toBeDefined();
     expect(stake?.lockedEgld).not.toBeNull();
   });

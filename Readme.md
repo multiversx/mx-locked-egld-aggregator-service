@@ -40,11 +40,22 @@ Beside the class implementation, make sure to update the `provider.loader.ts` fi
 
 5. **Testing Your Implementation**
 
-Before submitting a pull request, run the tests to ensure your implementation adheres to expected behaviors:
+Before submitting a pull request, you should perform some checks:
+5.1. **Via system test**
+- inside `config.mainnet.yaml` (or the according environment) update:
+  - `output.elastic.enable` to `false` to avoid having to set up an Elasticsearch instance (can remain to true is the setup is in place)
+  - and `output.jsonExport.enable` to `true` 
+  - set your provider as the only entry to the `snapshotsProviders` array
+  - inside `snapshots.service.ts` file, search for the `Locked EGLD snapshots cronjob` cronjob and set the cron expressions to something that happens more often (for example `@Cron(CronExpression.EVERY_10_SECONDS)`)
+  - start the app via `yarn run start:aggregator:mainnet`
+  - wait for the cron job to execute and make sure there is no error in the console and data is correctly exported into `lockedEgldSnapshot.json` file
 
-```bash
-yarn test:mainnet --provider=YOUR_PROVIDER_NAME # replace YOUR_PROVIDER_NAME with your provider file name
-```
+5.2. **Via integration test**
+- inside `service.spec.ts` update the `provider` and the `network` with your data and run the tests 
+- note that the test suite is skipped by default so make sure to un-skip it
+
+5.3. **Via own unit test**
+- define your own `<providerName>.spec.ts` test file inside `apps/aggregator/test` directory and write your own unit tests that ensure the correct functionality
 
 6. **Submit a Pull Request (PR)**
 
@@ -54,21 +65,23 @@ Once you've made the necessary changes and ensured that your implementation is c
 
 ### Running Tests
 
-To run the tests for a specific environment, use the following commands:
+Tests can be run via running: 
 
 ```bash
-yarn test:devnet --provider=YOUR_PROVIDER_NAME # devnet
-
-yarn test:testnet --provider=YOUR_PROVIDER_NAME # testnet
-
-yarn test:mainnet --provider=YOUR_PROVIDER_NAME # mainnet
+yarn test
 ```
-
-Ensure that you replace `YOUR_PROVIDER_NAME` with your provider name. Keep in mind that it is case-sensitive and it should have been initialized in `provider.loader.ts` file.
 
 ## Troubleshooting
 
-- To validate data accuracy, we verify that the combined locked EGLD amount from contracts is close to the collective total of all locked EGLD addresses. It the test fails, you can increase the `acceptablePercentageDifference` threshold
+1. To validate data accuracy, we verify that the combined locked EGLD amount from contracts is close to the collective total of all locked EGLD addresses. This means that we won't allow providers
+to declare a higher combined value of locked EGLD than the contract actually have. 
+
+2. If the locked EGLD provider uses an intermediary token to determine the number of EGLD based on that token's holding, the ratio should be included inside the PR.
+- Example: A liquid staking provider uses a 'AEGLD' token that is slightly higher as value compared to EGLD (let's say 1 AEGLD = 1.07 EGLD). When computing the 'locked EGLD' of a user, the provider 
+  could implement a formula like 'lockedEgldForUser = aEgldHolding / ratioBetweenEgldAndAegld'
+
+3. Integration test
+- In case of the integration test, you can increase the `acceptablePercentageDifference` threshold
 
 - To avoid hitting the rate limiter imposed by the public API, you have the option to fine-tune your settings to stay within the 2 requests per second (RPS) limit. To achieve this, consider modifying the `apiSleepTime` and `batchApiRequestSize` settings.
 

@@ -8,6 +8,7 @@ import { Lock, OriginLogger } from '@multiversx/sdk-nestjs-common';
 import { ElasticIndexerService } from './elastic/elastic.indexer.service';
 import { JsonExporterService } from './jsonExporter/json.exporter.service';
 import { ApiService } from '@multiversx/sdk-nestjs-http';
+import { ProviderLockedEgldInfo } from '../../../common/entities/provider.locked.egld.info';
 
 @Injectable()
 export class SnapshotsService {
@@ -23,7 +24,8 @@ export class SnapshotsService {
     private readonly jsonExporter: JsonExporterService,
   ) { }
 
-  @Cron(CronExpression.EVERY_DAY_AT_10AM)
+  // note that the snapshot time is not fixed and can be triggered at random times by the MultiversX team
+  @Cron(CronExpression.EVERY_DAY_AT_11AM)
   @Lock({ name: 'Locked EGLD snapshots cronjob', verbose: true })
   async indexData() {
     if (!await this.arePreliminaryChecksOk()) {
@@ -35,14 +37,14 @@ export class SnapshotsService {
       return;
     }
 
-    const lockedEgldUsers: Record<string, BigNumber> = {};
+    const lockedEgldUsers: Record<string, ProviderLockedEgldInfo[]> = {};
 
     const network = this.apiConfigService.getNetwork();
     for (const providerName of snapshotsProviders) {
       const providerUsers: Record<string, BigNumber> = {};
       const providerInstance = await loadProvider(this.baseProvider, network, providerName);
       if (!providerInstance) {
-        this.logger.error(`Cannot load scenario with name ${providerName}`);
+        this.logger.error(`Cannot load provider with name ${providerName}`);
       }
       this.logger.log(`Started processing liquid staking for provider '${providerName}'`);
       try {
@@ -50,11 +52,8 @@ export class SnapshotsService {
         this.logger.log(`Total liquid staking for provider: ${providerName}: ${stakedValueSum.dividedBy(1e18)} EGLD`);
 
         if (await this.isSumOfStakedLessOrEgualToContractStake(providerName, stakedValueSum, await providerInstance.getLockedEgldContracts())) {
-          this.addProviderRecordsToSum(providerUsers, lockedEgldUsers);
-        } else {
-          this.logger.error(`Liquid Staking provider sum of users stake is larger than the staking contracts stake. Provider=${providerName}, Sum=${stakedValueSum.toString(10)}`);
+          this.addProviderRecords(providerName, providerUsers, lockedEgldUsers);
         }
-
       } catch (e) {
         await this.logAndSendAlert(`Error while indexing data for ${providerName}: ${e}`);
       }
@@ -83,7 +82,7 @@ export class SnapshotsService {
     this.logger.error(message);
   }
 
-  async exportData(users: Record<string, BigNumber>) {
+  async exportData(users: Record<string, ProviderLockedEgldInfo[]>) {
     try {
       this.jsonExporter.exportJson(users);
       await this.addRecordsToIndexer(users);
@@ -92,12 +91,12 @@ export class SnapshotsService {
     }
   }
 
-  async addRecordsToIndexer(users: Record<string, BigNumber>) {
+  async addRecordsToIndexer(users: Record<string, ProviderLockedEgldInfo[]>) {
     const currentEpoch = await this.getCurrentEpoch();
     this.logger.log(`Fetched current epoch from network: ${currentEpoch}`);
     for (const address in users) {
-      const addressBalance = users[address];
-      await this.elasticIndexer.addLockedEgldForAddress(address, currentEpoch, addressBalance);
+      const lockedEgldInfo = users[address];
+      await this.elasticIndexer.addLockedEgldForAddress(address, currentEpoch, lockedEgldInfo);
     }
   }
 
@@ -147,30 +146,38 @@ export class SnapshotsService {
     users[address] = existingUserBalance.plus(balance);
   }
 
-  private addProviderRecordsToSum(providerRecords: Record<string, BigNumber>, sumRecords: Record<string, BigNumber>) {
+  private addProviderRecords(providerName: string, providerRecords: Record<string, BigNumber>, globalRecords: Record<string, ProviderLockedEgldInfo[]>) {
     for (const address in providerRecords) {
-      if (sumRecords[address]) {
-        sumRecords[address].plus(providerRecords[address]);
-      } else {
-        sumRecords[address] = providerRecords[address];
+      if (!globalRecords[address]) {
+        globalRecords[address] = [];
       }
+
+      globalRecords[address].push(new ProviderLockedEgldInfo({
+        providerName: providerName,
+        lockedEgld: providerRecords[address],
+      }));
     }
   }
 
-  private async isSumOfStakedLessOrEgualToContractStake(providerName: string, sum: BigNumber, contracts: string[]): Promise<boolean> {
-    const allContractsSum = new BigNumber(0);
+  async isSumOfStakedLessOrEgualToContractStake(providerName: string, sum: BigNumber, contracts: string[]): Promise<boolean> {
+    let allContractsSum = new BigNumber(0);
     for (const contract of contracts) {
       const contractStake = await this.getStakeOfContract(contract);
       if (contractStake) {
-        allContractsSum.plus(contractStake);
+        allContractsSum = allContractsSum.plus(contractStake);
       }
     }
 
     this.logger.log(`Provider ${providerName}: users stake: ${sum}, contracts stake: ${allContractsSum}`);
-    return sum.isLessThanOrEqualTo(allContractsSum);
+    if (sum.isLessThanOrEqualTo(allContractsSum)) {
+      return true;
+    }
+
+    this.logger.error(`Liquid Staking provider sum of users stake is larger than the staking contracts stake. Provider=${providerName}, Contracts stake=${allContractsSum.toString(10)}, Users locked EGLD=${sum.toString(10)}`);
+    return false;
   }
 
-  private async getStakeOfContract(contract: string): Promise<BigNumber | undefined> {
+  async getStakeOfContract(contract: string): Promise<BigNumber | undefined> {
     let contractSum = new BigNumber(0);
     try {
       const { data: contractData } = await this.apiService.get(`${this.apiConfigService.getApiUrl()}/accounts/${contract}/delegation`);

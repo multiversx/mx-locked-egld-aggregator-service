@@ -5,6 +5,7 @@ import { OriginLogger } from '@multiversx/sdk-nestjs-common';
 import { ApiService, ApiSettings } from '@multiversx/sdk-nestjs-http';
 import fs from 'fs';
 import path from 'path';
+import { ProviderLockedEgldInfo } from '../../../../common/entities/provider.locked.egld.info';
 
 @Injectable()
 export class ElasticIndexerService {
@@ -15,7 +16,7 @@ export class ElasticIndexerService {
     private readonly apiService: ApiService,
   ) { }
 
-  async addLockedEgldForAddress(address: string, epoch: number, totalLockedEgld: BigNumber): Promise<void> {
+  async addLockedEgldForAddress(address: string, epoch: number, lockedEgldInfo: ProviderLockedEgldInfo[]): Promise<void> {
     if (!this.apiConfigService.isElasticExportEnabled()) {
       return;
     }
@@ -28,7 +29,9 @@ export class ElasticIndexerService {
       }
     }
 
-    await this.setLockedEgldValues(address, epoch, totalLockedEgld);
+    for (const lockedEgld of lockedEgldInfo) {
+      await this.setLockedEgldValues(address, epoch, lockedEgld);
+    }
   }
 
   async isIndexWritable(): Promise<boolean> {
@@ -49,20 +52,20 @@ export class ElasticIndexerService {
     return true;
   }
 
-  private async setLockedEgldValues(address: string, epoch: number, totalLockedEgld: BigNumber) {
+  private async setLockedEgldValues(address: string, epoch: number, providerInfo: ProviderLockedEgldInfo) {
     const indexName = this.getIndexName(epoch);
 
-    const totalLockedEgldStr = totalLockedEgld.toFixed();
-    const totalLockedEgldNum = this.getNumericValueForBigInt(totalLockedEgld);
+    const totalLockedEgldStr = providerInfo.lockedEgld.toFixed();
+    const totalLockedEgldNum = this.getNumericValueForBigInt(providerInfo.lockedEgld);
     const lockedEgldFields = {
-      lockedEgld: totalLockedEgldStr,
-      lockedEgldNum: totalLockedEgldNum,
+      [`${providerInfo.providerName}_lockedEgld`]: totalLockedEgldStr,
+      [`${providerInfo.providerName}_lockedEgldNum`]: totalLockedEgldNum,
     };
 
     const esScript = `{"doc":${JSON.stringify(lockedEgldFields)}, "upsert": ${JSON.stringify(lockedEgldFields)}}`;
     await this.apiService.post(`${this.apiConfigService.getElasticUrl()}/${indexName}/_update/${address}`, esScript, this.getApiSettingsForESQueries());
 
-    this.logger.log(`Saved record for address ${address}. Liquid staking balance: ${totalLockedEgld}.`);
+    this.logger.log(`Saved record for address ${address} and provider ${providerInfo.providerName}. Liquid staking balance: ${providerInfo.lockedEgld}.`);
   }
 
   private getIndexName(epoch: number): string {
