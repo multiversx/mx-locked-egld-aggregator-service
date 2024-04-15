@@ -31,7 +31,7 @@
     "resolveJsonModule": true,
     "typeRoots": [
       "src/@types",
-      "node_modules/@types"
+      "node_modules/@types",
     ],
     "paths": {
       "@libs/common": [
@@ -42,7 +42,7 @@
       ],
       "@libs/timescaledb": [
         "libs/timescaledb/src"
-      ]
+      ],
     }
   }
 }

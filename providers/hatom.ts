@@ -1,27 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { LockedEgldProvider } from '@libs/common';
-import { BigNumber } from 'bignumber.js';
+import BigNumber from 'bignumber.js';
 
 @Injectable()
-export class ExampleProvider extends LockedEgldProvider {
-  private readonly tokenIdentifier = 'LEGLD-d74da9';
+export class HatomProvider extends LockedEgldProvider {
+  private readonly tokenIdentifier = 'SEGLD-3ad2d0';
   private readonly contracts = [
-    'erd1qqqqqqqqqqqqqpgqaqxztq0y764dnet95jwtse5u5zkg92sfacts6h9su3',
+    'erd1qqqqqqqqqqqqqpgq4gzfcw7kmkjy8zsf04ce6dl0auhtzjx078sslvrf4e',
   ];
 
   init(): Promise<void> {
     return Promise.resolve();
   }
 
-  // eslint-disable-next-line require-await
-  async getLockedEgldContracts(): Promise<string[]> {
+  getLockedEgldContracts(): Promise<string[]> {
     // Return hardcoded contracts. A provider also can return the contracts from an API.
-    return this.contracts;
+    return Promise.resolve(this.contracts);
   }
 
   async getAddressLockedEgld(address: string): Promise<{ lockedEgld: string }> {
     const tokenBalance = await this.baseProvider.getTokenBalance(address, this.tokenIdentifier);
-    const tokenPrice = 1; // TODO get LEGLD-d74da9 price in EGLD
+    const tokenPrice = 1; // TODO get SEGLD-3ad2d0 price in EGLD
 
     const addressStake = new BigNumber(tokenBalance).multipliedBy(tokenPrice).toFixed();
 
@@ -31,8 +30,6 @@ export class ExampleProvider extends LockedEgldProvider {
   }
 
   async getLockedEgldAddresses(): Promise<string[]> {
-    const holders = await this.baseProvider.getTokenHolders(this.tokenIdentifier);
-
-    return holders;
+    return await this.baseProvider.getTokenHolders(this.tokenIdentifier);
   }
 }

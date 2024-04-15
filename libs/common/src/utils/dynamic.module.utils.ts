@@ -35,7 +35,7 @@ export class DynamicModuleUtils {
       useFactory: (apiConfigService: ApiConfigService) =>
         new ElasticModuleOptions({
           url: apiConfigService.getElasticUrl(),
-          customValuePrefix: 'api',
+          customValuePrefix: 'liquid',
         }),
       inject: [ApiConfigService],
     });

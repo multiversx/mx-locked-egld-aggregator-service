@@ -1,18 +1,22 @@
-import { LiquidStakingProviderInterface } from '@libs/common';
+import { LockedEgldProvider } from '@libs/common';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class DummyProvider implements LiquidStakingProviderInterface {
-    constructor() { }
-    public getAddressStake(_address: string): Promise<{ stake: string }> {
-        return Promise.resolve({ stake: "0" });
-    }
+export class DummyProvider extends LockedEgldProvider {
 
-    public getStakingAddresses(): Promise<string[]> {
-        return Promise.resolve(['erd1qyu5wthldzr8wx5c9ucg8kjagg0jfs53s8nr3zpz3hypefsdd8ssycr6th']);
-    }
+  init(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
 
-    public getStakingContracts(): Promise<string[]> {
-        return Promise.resolve(['erd1qyu5wthldzr8wx5c9ucg8kjagg0jfs53s8nr3zpz3hypefsdd8ssycr6th']);
-    }
+  public getAddressLockedEgld(_address: string): Promise<{ lockedEgld: string }> {
+    return Promise.resolve({ lockedEgld: '0' });
+  }
+
+  public getLockedEgldAddresses(): Promise<string[]> {
+    return Promise.resolve(['erd1qyu5wthldzr8wx5c9ucg8kjagg0jfs53s8nr3zpz3hypefsdd8ssycr6th']);
+  }
+
+  public getLockedEgldContracts(): Promise<string[]> {
+    return Promise.resolve(['erd1qyu5wthldzr8wx5c9ucg8kjagg0jfs53s8nr3zpz3hypefsdd8ssycr6th']);
+  }
 }

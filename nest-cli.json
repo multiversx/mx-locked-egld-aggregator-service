@@ -24,6 +24,10 @@
       {
         "include": "../config/public-config.mainnet.yaml",
         "outDir": "./dist/config"
+      },
+      {
+        "include": "../src/elastic/mappings/index.mapping.json",
+        "outDir": "./dist/apps/aggregator/src"
       }
     ]
   },

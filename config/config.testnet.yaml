@@ -2,12 +2,26 @@ network: testnet
 urls:
   api: 'https://testnet-api.multiversx.com'
   gateway: 'https://testnet-gateway.multiversx.com'
-  elastic: 'https://testnet-index.multiversx.com'
+output:
+  elastic:
+    enabled: true
+    url: 'http://localhost:9200'
+    username: ''
+    password: ''
+    indexPrefix: 'accounts-000001'
+  jsonExport:
+    enabled: true
+    filePath: 'lockedEgldSnapshot.json'
 keepAliveTimeout:
   downstream: 61000
   upstream: 60000
+api:
+  port: 3000
+  prefix: 'liquid-staking-aggregator'
 flags:
   useKeepAliveAgent: true
+snapshotsProviders:
+  - dummy
 testConfig:
   acceptablePercentageDifference: 10
   apiSleepTime: 10000
