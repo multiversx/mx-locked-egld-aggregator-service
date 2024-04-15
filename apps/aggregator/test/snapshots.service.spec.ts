@@ -72,7 +72,7 @@ describe('SnapshotsService', () => {
       expect(result).toEqual(expectedContractSum);
       expect(apiService.get).toHaveBeenCalledWith('fake-api-url/accounts/contract-id/delegation');
     });
-  })
+  });
 
   describe('isSumOfStakedLessOrEgualToContractStake', () => {
     it('isSumOfStakedLessOrEgualToContractStake should return correct values', async () => {
@@ -90,13 +90,13 @@ describe('SnapshotsService', () => {
       const resultThatShouldBeFalse = await provider.isSumOfStakedLessOrEgualToContractStake("my-provider", new BigNumber(1100), ["first-contract", "second-contract"]);
       expect(resultThatShouldBeFalse).toBeFalsy();
     });
-  })
+  });
 
   describe('getCurrentEpoch', () => {
     it('should return the epoch number when API call is successful', async () => {
       jest.spyOn(apiConfigService, 'getApiUrl').mockReturnValue('fake-api-url');
       jest.spyOn(apiService, 'get').mockResolvedValue({
-        data: { epoch: 123 }
+        data: { epoch: 123 },
       });
 
       const epoch = await provider.getCurrentEpoch();
@@ -108,7 +108,7 @@ describe('SnapshotsService', () => {
     it('should retry up to 10 times if epoch data is not available', async () => {
       jest.spyOn(apiConfigService, 'getApiUrl').mockReturnValue('fake-api-url');
       jest.spyOn(apiService, 'get').mockResolvedValue({
-        data: {}
+        data: {},
       });
 
       try {
@@ -136,5 +136,5 @@ describe('SnapshotsService', () => {
       await expect(provider.getCurrentEpoch()).rejects.toThrow('cannot get current network epoch');
       expect(apiService.get).toHaveBeenCalledTimes(10);
     });
-  })
+  });
 });
