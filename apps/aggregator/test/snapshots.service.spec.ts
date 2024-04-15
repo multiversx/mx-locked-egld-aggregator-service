@@ -12,6 +12,7 @@ describe('SnapshotsService', () => {
   let provider: SnapshotsService;
   let apiService: ApiService;
   let apiConfigService: ApiConfigService;
+  let elasticIndexer: ElasticIndexerService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -56,6 +57,7 @@ describe('SnapshotsService', () => {
     provider = module.get<SnapshotsService>(SnapshotsService);
     apiService = module.get<ApiService>(ApiService);
     apiConfigService = module.get<ApiConfigService>(ApiConfigService);
+    elasticIndexer = module.get<ElasticIndexerService>(ElasticIndexerService);
   });
 
   describe('getStakeOfContract', () => {
@@ -135,6 +137,35 @@ describe('SnapshotsService', () => {
 
       await expect(provider.getCurrentEpoch()).rejects.toThrow('cannot get current network epoch');
       expect(apiService.get).toHaveBeenCalledTimes(10);
+    });
+  });
+
+  describe('addRecordsToIndexer', () => {
+    it('should call getCurrentEpoch and addLockedEgldForAddress for each user', async () => {
+      const users = {
+        'erd1abc': [{ providerName: 'provider1', lockedEgld: new BigNumber(1000) }],
+        'erd1dfg': [{ providerName: 'provider2', lockedEgld: new BigNumber(2000) }],
+      };
+      const currentEpoch = 123;
+
+      jest.spyOn(provider, 'getCurrentEpoch').mockResolvedValue(currentEpoch);
+
+      await provider.addRecordsToIndexer(users);
+
+      expect(provider.getCurrentEpoch).toHaveBeenCalled();
+      expect(elasticIndexer.addLockedEgldForAddress).toHaveBeenCalledWith('erd1abc', currentEpoch, users['erd1abc']);
+      expect(elasticIndexer.addLockedEgldForAddress).toHaveBeenCalledWith('erd1dfg', currentEpoch, users['erd1dfg']);
+      expect(elasticIndexer.addLockedEgldForAddress).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle no users without any errors', async () => {
+      const users = {};
+
+      jest.spyOn(provider, 'getCurrentEpoch').mockResolvedValue(123);
+      await provider.addRecordsToIndexer(users);
+
+      expect(provider.getCurrentEpoch).toHaveBeenCalled();
+      expect(elasticIndexer.addLockedEgldForAddress).not.toHaveBeenCalled();
     });
   });
 });
