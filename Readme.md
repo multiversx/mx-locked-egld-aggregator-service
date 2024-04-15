@@ -52,7 +52,7 @@ Before submitting a pull request, you should perform some checks:
 
 5.2. **Via integration test**
 - inside `service.spec.ts` update the `provider` and the `network` with your data and run the tests 
-- note that the `should check the total staked amount is equal to the sum of all staking addresses` test is skipped by default so make sure to un-skip it
+- note that the test suite is skipped by default so make sure to un-skip it
 
 5.3. **Via own unit test**
 - define your own `<providerName>.spec.ts` test file inside `apps/aggregator/test` directory and write your own unit tests that ensure the correct functionality
@@ -77,9 +77,8 @@ yarn test
 to declare a higher combined value of locked EGLD than the contract actually have. 
 
 2. If the locked EGLD provider uses an intermediary token to determine the number of EGLD based on that token's holding, the ratio should be included inside the PR.
-
-Example: A liquid staking provider uses a 'AEGLD' token that is slightly higher as value compared to EGLD (let's say 1 AEGLD = 1.07 EGLD). When computing the 'locked EGLD' of a user, the provider 
-could implement a formula like 'lockedEgldForUser = aEgldHolding / ratioBetweenEgldAndAegld'
+- Example: A liquid staking provider uses a 'AEGLD' token that is slightly higher as value compared to EGLD (let's say 1 AEGLD = 1.07 EGLD). When computing the 'locked EGLD' of a user, the provider 
+  could implement a formula like 'lockedEgldForUser = aEgldHolding / ratioBetweenEgldAndAegld'
 
 3. Integration test
 - In case of the integration test, you can increase the `acceptablePercentageDifference` threshold

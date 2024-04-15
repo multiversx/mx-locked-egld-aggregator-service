@@ -11,7 +11,7 @@ function isCloseTo(value1: number, value2: number, margin = 10) {
   return difference <= allowedDifference;
 }
 
-describe('Example provider testing', () => {
+describe.skip('Example provider testing', () => {
   let batchIterations = 0;
   let lockedEgldProvider: LockedEgldProvider;
   let baseProvider: BaseProvider;
@@ -62,7 +62,7 @@ describe('Example provider testing', () => {
     expect(stake?.lockedEgld).not.toBeNull();
   });
 
-  it.skip('should check the total staked amount is equal to the sum of all staking addresses', async () => {
+  it('should check the total staked amount is equal to the sum of all staking addresses', async () => {
     const API_SLEEP_TIME = apiConfigService.getTestConfigApiSleepTime();
     const BATCH_API_REQUEST_SIZE = apiConfigService.getTestConfigBatchApiRequestSize();
 
