@@ -58,33 +58,83 @@ describe('SnapshotsService', () => {
     apiConfigService = module.get<ApiConfigService>(ApiConfigService);
   });
 
-  it('should return the correct contract sum when API call is successful', async () => {
-    const contract = 'contract-id';
-    const fakeContractData = [{ userActiveStake: new BigNumber(100) }, { userActiveStake: new BigNumber(200) }];
-    const expectedContractSum = new BigNumber(300);
+  describe('getStakeOfContract', () => {
+    it('should return the correct contract sum when API call is successful', async () => {
+      const contract = 'contract-id';
+      const fakeContractData = [{ userActiveStake: new BigNumber(100) }, { userActiveStake: new BigNumber(200) }];
+      const expectedContractSum = new BigNumber(300);
 
-    jest.spyOn(apiService, 'get').mockResolvedValue({ data: fakeContractData });
-    jest.spyOn(apiConfigService, 'getApiUrl').mockReturnValue('fake-api-url');
+      jest.spyOn(apiService, 'get').mockResolvedValue({ data: fakeContractData });
+      jest.spyOn(apiConfigService, 'getApiUrl').mockReturnValue('fake-api-url');
 
-    const result = await provider.getStakeOfContract(contract);
+      const result = await provider.getStakeOfContract(contract);
 
-    expect(result).toEqual(expectedContractSum);
-    expect(apiService.get).toHaveBeenCalledWith('fake-api-url/accounts/contract-id/delegation');
-  });
+      expect(result).toEqual(expectedContractSum);
+      expect(apiService.get).toHaveBeenCalledWith('fake-api-url/accounts/contract-id/delegation');
+    });
+  })
 
-  it('isSumOfStakedLessOrEgualToContractStake should return correct values', async () => {
-    const fakeContractData1 = [{ userActiveStake: new BigNumber(100) }, { userActiveStake: new BigNumber(200) }];
-    const fakeContractData2 = [{ userActiveStake: new BigNumber(700) }];
-    jest.spyOn(apiService, 'get').mockResolvedValueOnce({ data: fakeContractData1 });
-    jest.spyOn(apiService, 'get').mockResolvedValueOnce({ data: fakeContractData2 });
+  describe('isSumOfStakedLessOrEgualToContractStake', () => {
+    it('isSumOfStakedLessOrEgualToContractStake should return correct values', async () => {
+      const fakeContractData1 = [{ userActiveStake: new BigNumber(100) }, { userActiveStake: new BigNumber(200) }];
+      const fakeContractData2 = [{ userActiveStake: new BigNumber(700) }];
+      jest.spyOn(apiService, 'get').mockResolvedValueOnce({ data: fakeContractData1 });
+      jest.spyOn(apiService, 'get').mockResolvedValueOnce({ data: fakeContractData2 });
 
 
-    jest.spyOn(apiConfigService, 'getApiUrl').mockReturnValue('fake-api-url');
+      jest.spyOn(apiConfigService, 'getApiUrl').mockReturnValue('fake-api-url');
 
-    const resultThatShouldBeTrue = await provider.isSumOfStakedLessOrEgualToContractStake("my-provider", new BigNumber(900), ["first-contract", "second-contract"]);
-    expect(resultThatShouldBeTrue).toBeTruthy();
+      const resultThatShouldBeTrue = await provider.isSumOfStakedLessOrEgualToContractStake("my-provider", new BigNumber(900), ["first-contract", "second-contract"]);
+      expect(resultThatShouldBeTrue).toBeTruthy();
 
-    const resultThatShouldBeFalse = await provider.isSumOfStakedLessOrEgualToContractStake("my-provider", new BigNumber(1100), ["first-contract", "second-contract"]);
-    expect(resultThatShouldBeFalse).toBeFalsy();
-  });
+      const resultThatShouldBeFalse = await provider.isSumOfStakedLessOrEgualToContractStake("my-provider", new BigNumber(1100), ["first-contract", "second-contract"]);
+      expect(resultThatShouldBeFalse).toBeFalsy();
+    });
+  })
+
+  describe('getCurrentEpoch', () => {
+    it('should return the epoch number when API call is successful', async () => {
+      jest.spyOn(apiConfigService, 'getApiUrl').mockReturnValue('fake-api-url');
+      jest.spyOn(apiService, 'get').mockResolvedValue({
+        data: { epoch: 123 }
+      });
+
+      const epoch = await provider.getCurrentEpoch();
+
+      expect(epoch).toStrictEqual(123);
+      expect(apiService.get).toHaveBeenCalledWith('fake-api-url/stats');
+    });
+
+    it('should retry up to 10 times if epoch data is not available', async () => {
+      jest.spyOn(apiConfigService, 'getApiUrl').mockReturnValue('fake-api-url');
+      jest.spyOn(apiService, 'get').mockResolvedValue({
+        data: {}
+      });
+
+      try {
+        await provider.getCurrentEpoch();
+      } catch (e: any) {
+        expect(e.message).toMatch(/cannot get current network epoch/);
+      }
+
+      expect(apiService.get).toHaveBeenCalledTimes(10);
+    });
+
+    it('should throw an error after 10 unsuccessful attempts', async () => {
+      jest.spyOn(apiConfigService, 'getApiUrl').mockReturnValue('fake-api-url');
+      jest.spyOn(apiService, 'get').mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: {} });
+
+      await expect(provider.getCurrentEpoch()).rejects.toThrow('cannot get current network epoch');
+      expect(apiService.get).toHaveBeenCalledTimes(10);
+    });
+  })
 });
