@@ -31,7 +31,7 @@ describe.skip('Example provider testing', () => {
 
     apiConfigService = moduleRef.get(ApiConfigService);
     baseProvider = moduleRef.get(BaseProvider);
-    const provider = "example";
+    const provider = "hatom-segld";
     const network = "mainnet";
     lockedEgldProvider = await loadProvider(baseProvider, network, provider);
   });

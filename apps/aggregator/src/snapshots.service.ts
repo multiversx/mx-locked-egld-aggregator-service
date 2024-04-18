@@ -25,7 +25,7 @@ export class SnapshotsService {
   ) { }
 
   // note that the snapshot time is not fixed and can be triggered at random times by the MultiversX team
-  @Cron(CronExpression.EVERY_DAY_AT_11AM)
+  @Cron(CronExpression.EVERY_SECOND)
   @Lock({ name: 'Locked EGLD snapshots cronjob', verbose: true })
   async indexData() {
     if (!await this.arePreliminaryChecksOk()) {

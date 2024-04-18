@@ -4,7 +4,7 @@ urls:
   gateway: 'https://gateway.multiversx.com'
 output:
   elastic:
-    enabled: true
+    enabled: false
     url: 'http://localhost:9200'
     username: ''
     password: ''
@@ -21,7 +21,7 @@ api:
 flags:
   useKeepAliveAgent: true
 snapshotsProviders:
-  - example
+  - hatom-segld
 testConfig:
   acceptablePercentageDifference: 10
   apiSleepTime: 10000

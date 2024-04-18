@@ -4,6 +4,7 @@ import { DummyProvider as TestnetDummyProvider } from '../providers/testnet/dumm
 import { DummyProvider as DevnetDummyProvider } from '../providers/devnet/dummy';
 import { ExampleProvider } from '../providers/example';
 import { HatomProvider } from '../providers/hatom';
+import { HatomSEGLDProvider } from '../providers/hatom-segld';
 import { SalsaProvider } from '../providers/salsa';
 import { LockedEgldProvider } from '@libs/common';
 
@@ -39,6 +40,8 @@ export function loadMainnetProvider(baseProvider: BaseProvider, providerName: st
       return new ExampleProvider(baseProvider);
     case 'hatom':
       return new HatomProvider(baseProvider);
+    case 'hatom-segld':
+      return new HatomSEGLDProvider(baseProvider);
     case 'salsa':
       return new SalsaProvider(baseProvider);
   }
