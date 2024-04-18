@@ -21,7 +21,7 @@ api:
 flags:
   useKeepAliveAgent: true
 snapshotsProviders:
-  - hatom-segld
+  - hatom-htm
 testConfig:
   acceptablePercentageDifference: 10
   apiSleepTime: 10000
