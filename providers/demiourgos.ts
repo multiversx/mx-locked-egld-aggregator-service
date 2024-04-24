@@ -14,7 +14,6 @@ export class DemiourgosProvider extends LockedEgldProvider {
 
   // eslint-disable-next-line require-await
   async getLockedEgldContracts(): Promise<string[]> {
-    // return Promise.resolve([this.contract]);
     return [this.contract];
   }
 
@@ -27,9 +26,7 @@ export class DemiourgosProvider extends LockedEgldProvider {
     const addressStake = new BigNumber(tokenBalance)
       .multipliedBy(this.vegldExchangeRate)
       .dividedBy(1e18)
-      .toFixed(0);
-  
-    console.log('Locked EGLD:', addressStake);
+      .toFixed();
   
     return {
       lockedEgld: addressStake,
