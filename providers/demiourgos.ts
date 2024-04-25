@@ -1,22 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { LockedEgldProvider } from '@libs/common';
 import { BigNumber } from 'bignumber.js';
-import axios from 'axios';
 
 @Injectable()
 export class DemiourgosProvider extends LockedEgldProvider {
   private readonly tokenIdentifier = 'VEGLD-2b9319';
-  private readonly contracts = [
-    'erd1qqqqqqqqqqqqqpgqawus4zu5w2frmhh9rscjqnu9x6msfjya2d2sfw7tsn',
-  ];
+  private readonly contract = 'erd1qqqqqqqqqqqqqpgqawus4zu5w2frmhh9rscjqnu9x6msfjya2d2sfw7tsn';
+  private vegldExchangeRate = '0';
 
-  init(): Promise<void> {
-    return Promise.resolve();
+  async init(): Promise<void> {
+    await this.fetchVegldExchangeRate();
   }
 
   // eslint-disable-next-line require-await
   async getLockedEgldContracts(): Promise<string[]> {
-    return Promise.resolve(this.contracts);
+    return [this.contract];
   }
 
   async getAddressLockedEgld(address: string): Promise<{ lockedEgld: string }> {
@@ -24,16 +22,12 @@ export class DemiourgosProvider extends LockedEgldProvider {
       address,
       this.tokenIdentifier,
     );
-
-    const response = await axios.get(
-      'https://vestadex.com/api/price?pair=EGLD,VEGLD',
-    );
-    const tokenPrice = response.data.price;
-
+  
     const addressStake = new BigNumber(tokenBalance)
-      .multipliedBy(tokenPrice)
+      .multipliedBy(this.vegldExchangeRate)
+      .dividedBy(1e18)
       .toFixed();
-
+  
     return {
       lockedEgld: addressStake,
     };
@@ -45,5 +39,31 @@ export class DemiourgosProvider extends LockedEgldProvider {
     );
 
     return holders;
+  }
+
+  public async fetchVegldExchangeRate() {
+    const response = await this.baseProvider
+      .getApiService()
+      .post(`${this.baseProvider.getApiConfigService().getApiUrl()}/query`, {
+        args: [],
+        funcName: 'getVegldPrice',
+        scAddress: this.contract,
+      });
+
+    const base64 = response.data.returnData[0];
+
+    this.vegldExchangeRate = this.convertBase64ToDecimal(base64);
+  }
+
+  private convertBase64ToDecimal(value: string) {
+    const decodedString = atob(value);
+
+    let decimalNumber = 0;
+
+    for (let i = 0; i < decodedString.length; i++) {
+      decimalNumber = decimalNumber * 256 + decodedString.charCodeAt(i);
+    }
+
+    return String(decimalNumber);
   }
 }

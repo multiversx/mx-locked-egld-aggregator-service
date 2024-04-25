@@ -18,13 +18,13 @@ export class BaseProvider {
   //   return this.timeCoordinates;
   // }
 
-  // getApiService(): ApiService {
-  //   return this.apiService;
-  // }
+  getApiService(): ApiService {
+    return this.apiService;
+  }
 
-  // getApiConfigService(): ApiConfigService {
-  //   return this.apiConfigService;
-  // }
+  getApiConfigService(): ApiConfigService {
+    return this.apiConfigService;
+  }
 
   async getTokenBalance(address: string, token: string): Promise<string> {
     const url = `${this.apiConfigService.getApiUrl()}/accounts/${address}/tokens/${token}?extract=balance`;
