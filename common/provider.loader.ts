@@ -5,6 +5,7 @@ import { DummyProvider as DevnetDummyProvider } from '../providers/devnet/dummy'
 import { ExampleProvider } from '../providers/example';
 import { HatomProvider } from '../providers/hatom';
 import { SalsaProvider } from '../providers/salsa';
+import { DemiourgosProvider } from '../providers/demiourgos';
 import { LockedEgldProvider } from '@libs/common';
 
 export async function loadProvider(baseProvider: BaseProvider, network: string, providerName: string): Promise<LockedEgldProvider> {
@@ -28,7 +29,6 @@ export async function loadProvider(baseProvider: BaseProvider, network: string, 
   }
   await provider.init();
   return provider;
-
 }
 
 export function loadMainnetProvider(baseProvider: BaseProvider, providerName: string): LockedEgldProvider | undefined {
@@ -41,6 +41,8 @@ export function loadMainnetProvider(baseProvider: BaseProvider, providerName: st
       return new HatomProvider(baseProvider);
     case 'salsa':
       return new SalsaProvider(baseProvider);
+    case 'demiourgos':
+      return new DemiourgosProvider(baseProvider);
   }
 
   return;
